@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>EduGame Platform</title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+</head>
+
+<body>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <div class="logo">
+      🎮 EduGame
+    </div>
+
+    <div class="menu">
+
+      <button onclick="showScreen('dashboard')">
+        🏠 Dashboard
+      </button>
+
+      <button onclick="showScreen('quizBuilder')">
+        📝 Criar Quiz
+      </button>
+
+      <button onclick="showScreen('playQuiz')">
+        🎯 Jogar Quiz
+      </button>
+
+      <button onclick="showScreen('memoryGame')">
+        🧠 Jogo Memória
+      </button>
+
+      <button onclick="showScreen('associationBuilder')">
+  🔗 Associação de Colunas
+</button>
+
+      <button onclick="showScreen('ranking')">
+        🏆 Ranking
+      </button>
+
+      <button onclick="showScreen('ai')">
+        🤖 IA
+      </button>
+
+    </div>
+
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="screen active">
+
+      <h1>Painel Principal</h1>
+
+      <div class="cards">
+
+        <div class="card clickable" onclick="showScreen('playQuiz')">
+
+          <h3>Quiz Multiplayer</h3>
+
+          <p>
+            Modo competitivo estilo Kahoot.
+          </p>
+
+        </div>
+
+        <div class="card clickable" onclick="showScreen('memoryGame')">
+
+          <h3>Flashcards</h3>
+
+          <p>
+            Aprendizagem rápida.
+          </p>
+
+        </div>
+
+        <div class="card clickable" onclick="showScreen('ranking')">
+
+          <h3>Sistema XP</h3>
+
+          <p>
+            Níveis e experiência.
+          </p>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- QUIZ BUILDER -->
+    <section id="quizBuilder" class="screen">
+
+      <h1>📝 Criador de Quiz</h1>
+
+      <!-- CRIADOR DE PERGUNTAS -->
+      <div class="builder">
+
+        <input type="text" id="question" placeholder="Digite a pergunta">
+
+        <input type="text" id="a" placeholder="Alternativa A">
+
+        <input type="text" id="b" placeholder="Alternativa B">
+
+        <input type="text" id="c" placeholder="Alternativa C">
+
+        <input type="text" id="d" placeholder="Alternativa D">
+
+        <select id="correct">
+
+          <option value="">
+            Resposta correta
+          </option>
+
+          <option>A</option>
+          <option>B</option>
+          <option>C</option>
+          <option>D</option>
+
+        </select>
+
+        <button class="primary" onclick="saveQuestion()">
+          💾 Salvar Pergunta
+        </button>        
+
+      </div>
+
+       <!-- CRIADOR QUIZ -->
+
+       <h2>
+        📚 Criar Quiz com várias perguntas
+      </h2>
+
+      <div class="builder">
+
+        <input type="text" id="quizTitle" placeholder="Nome do Quiz">
+
+        <button class="primary" onclick="loadQuestionsToSelect()">
+          📥 Carregar Perguntas
+        </button>
+
+        <div id="questionsSelect"></div>
+
+        <button class="primary" onclick="saveQuiz()">
+          ✅ Salvar Quiz
+        </button>
+
+      </div>
+
+      <!-- LISTA -->
+      <div id="questions"></div>
+
+    </section>           
+      <hr>     
+
+    <!-- PLAY QUIZ -->
+    <section id="playQuiz" class="screen">
+
+      <h1>🎯 Jogar Quiz</h1>
+
+      <!-- NOME -->
+      <div class="builder">
+
+        <input type="text" id="playerName" placeholder="Digite seu nome">
+
+      </div>
+
+      <!-- QUIZZES -->
+      <div id="quizList"></div>
+
+      <!-- QUIZ -->
+      <div id="quizContainer"></div>
+
+    </section>
+
+    <!-- MEMORY GAME -->
+    <section id="memoryGame" class="screen">
+
+      <h1>🧠 Criador Jogo Memória</h1>
+
+      <div class="builder">
+
+        <input type="text" id="memoryTitle" placeholder="Nome do jogo">
+
+        <input type="file" id="memoryImage" accept="image/*">
+
+        <button type="button" class="primary" onclick="addMemoryCard()">
+          ➕ Adicionar Carta
+        </button>
+
+        <button class="primary" onclick="saveMemoryGame()">
+          💾 Salvar Jogo
+        </button>
+
+      </div>
+
+      <h2>🖼 Preview</h2>
+
+      <div class="memory-grid" id="memoryPreview"></div>
+
+      <hr>
+
+      <h2>🎮 Jogos Salvos</h2>
+
+      <div id="memoryGamesList"></div>
+
+      <hr>
+
+      <div class="memory-grid" id="memoryGrid"></div>
+
+    </section>
+
+    <!-- RANKING -->
+    <section id="ranking" class="screen">
+
+      <h1>🏆 Ranking</h1>
+
+      <div id="rankingList"></div>
+
+    </section>
+
+    <!-- IA -->
+    <section id="ai" class="screen">
+
+      <h1>🤖 IA Geradora</h1>
+
+      <div class="builder">
+
+        <textarea id="theme" placeholder="Digite um tema"></textarea>
+
+        <button class="primary" onclick="generateAIQuestion()">
+          ⚡ Gerar
+        </button>
+
+      </div>
+
+      <div id="aiResult"></div>
+
+    </section>
+
+    <!-- ASSOCIATION GAME -->
+
+    <section id="associationBuilder" class="screen">
+
+  <h1>🔗 Criador de Associação de Colunas</h1>
+
+  <input type="text" id="gameTitle" placeholder="Título do jogo">
+
+  <label class="association-mode-label">
+    Tipo de associação
+    <select id="associationMode">
+      <option value="numbers">Numeração</option>
+      <option value="lines">Linhas</option>
+    </select>
+  </label>
+
+  <div id="pairsContainer"></div>
+
+  <button onclick="addPair()">➕ Adicionar Par</button>
+  <button onclick="saveGame()">💾 Salvar Jogo</button>
+
+  <h2>🎮 Jogos Salvos</h2>
+
+  <div id="associationList"></div>
+
+</section>
+
+<section id="associationGame" class="screen">
+
+  <h1>🎮 Jogo de Associação</h1>
+
+  <div id="associationGameContainer"></div>
+
+</section>
+
+
+
+  </div>
+
+ 
+
+  <script type="module" src="script.js"></script>
+
+</body>
+
+</html>
