@@ -1028,14 +1028,14 @@ function renderAssociationGameList(){
       <div class="question-card">
         <h3>${game.title}</h3>
         <p>${game.pairs.length} pares</p>
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <button class="primary" onclick="playAssociationGame('${game.id}')">
+        <div class="action-buttons">
+          <button class="action-btn play-btn" onclick="playAssociationGame('${game.id}')">
             ▶ Jogar
           </button>
-          <button class="primary" onclick="editAssociationGame('${game.id}')">
+          <button class="action-btn edit-btn" onclick="editAssociationGame('${game.id}')">
             ✏ Editar
           </button>
-          <button class="delete-btn" onclick="deleteAssociationGame('${game.id}')">
+          <button class="action-btn delete-btn" onclick="deleteAssociationGame('${game.id}')">
             🗑 Excluir
           </button>
         </div>
@@ -1671,17 +1671,14 @@ function renderQuestions(){
           ✅ Correta: ${q.correct}
         </p>
 
-        <div style="margin-top:15px; display:flex; gap:10px;">
-
-  <button class="primary" onclick="editQuestion('${q.id}')">
-    ✏ Editar
-  </button>
-
-  <button class="primary" onclick="deleteQuestion('${q.id}')">
-    🗑 Excluir
-  </button>
-
-</div>
+        <div class="action-buttons">
+          <button class="action-btn edit-btn" onclick="editQuestion('${q.id}')">
+            ✏ Editar
+          </button>
+          <button class="action-btn delete-btn" onclick="deleteQuestion('${q.id}')">
+            🗑 Excluir
+          </button>
+        </div>
 
       </div>
     `;
@@ -2502,21 +2499,21 @@ async function loadMemoryGames(){
           >
 
             <button
-              class="primary"
+              class="action-btn play-btn"
               onclick="playMemoryGame('${docItem.id}')"
             >
               ▶ Jogar
             </button>
 
             <button
-              class="primary"
+              class="action-btn edit-btn"
               onclick="editMemoryGame('${docItem.id}')"
             >
               ✏ Editar
             </button>
 
             <button
-              class="delete-btn"
+              class="action-btn delete-btn"
               onclick="deleteMemoryGame('${docItem.id}')"
             >
               🗑 Excluir
@@ -2902,7 +2899,7 @@ async function loadSavedQuizzes() {
       <div class="question-card">
         <h3>${quiz.title}</h3>
         <p>${quiz.questions?.length || 0} perguntas</p>
-        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+        <div style="class=action-buttons; margin-top:10px;">
           <button class="primary" onclick="editQuiz('${docItem.id}')">
             ✏ Editar
           </button>
@@ -3090,7 +3087,7 @@ function renderSavedBuilderGames(){
       <div class="question-card">
         <h3>${game.title || label}</h3>
         <p>${type === 'dragDrop' ? game.pairs?.length + ' itens' : type === 'imageQuiz' ? 'Quiz de imagem' : type === 'completeWord' ? 'Complete a palavra' : 'Sequência lógica'}</p>
-        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+        <div style="class=action-buttons; margin-top:10px;">
           <button class="primary" onclick="playBuilderGame('${type}','${game.id}')">▶ Jogar</button>
           <button class="primary" onclick="editBuilderGame('${type}','${game.id}')">✏ Editar</button>
           <button class="delete-btn" onclick="deleteBuilderGame('${type}','${game.id}')">🗑 Excluir</button>

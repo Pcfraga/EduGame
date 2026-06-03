@@ -262,7 +262,6 @@ body{
   margin-top:20px;
 }
 
-/* TÍTULOS */
 h1{
   font-size:42px;
   color:white;
@@ -280,7 +279,6 @@ h2{
   text-shadow:1px 1px 3px rgba(0,0,0,0.2);
 }
 
-/* FORMULÁRIOS */
 .builder{
   background:white;
   padding:30px;
@@ -363,7 +361,6 @@ hr{
   margin:35px 0;
 }
 
-/* MEMÓRIA */
 .memory-grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(100px,1fr));
@@ -394,7 +391,6 @@ hr{
   background:linear-gradient(135deg, #4ECDC4 0%, #95E1D3 100%);
 }
 
-/* QUIZ */
 .question-container{
   background:white;
   padding:30px;
@@ -466,7 +462,6 @@ hr{
   border-color:#FF6B6B;
 }
 
-/* RANKING */
 .ranking-item{
   background:white;
   padding:20px 25px;
@@ -510,7 +505,80 @@ hr{
   font-weight:700;
 }
 
-/* RESPONSIVO */
+/* ACTION BUTTONS - Jogar, Editar, Excluir */
+.action-buttons{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-top:15px;
+  justify-content:center;
+}
+
+.action-btn{
+  padding:12px 20px;
+  border:none;
+  border-radius:14px;
+  font-size:15px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow:0 4px 12px rgba(0,0,0,0.15);
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+}
+
+.action-btn:hover{
+  transform:translateY(-4px);
+  box-shadow:0 8px 20px rgba(0,0,0,0.25);
+}
+
+.action-btn:active{
+  transform:translateY(-2px);
+}
+
+.play-btn{
+  background:linear-gradient(135deg, #4ECDC4 0%, #1DADA1 100%);
+  color:white;
+}
+
+.play-btn:hover{
+  background:linear-gradient(135deg, #3DBDB5 0%, #0C9490 100%);
+}
+
+.edit-btn{
+  background:linear-gradient(135deg, #FFD93D 0%, #FFB700 100%);
+  color:#333;
+}
+
+.edit-btn:hover{
+  background:linear-gradient(135deg, #FFC700 0%, #FF9800 100%);
+}
+
+.delete-btn{
+  background:linear-gradient(135deg, #FF6B6B 0%, #EE5A52 100%);
+  color:white;
+}
+
+.delete-btn:hover{
+  background:linear-gradient(135deg, #FF5252 0%, #D63031 100%);
+}
+
+.game-actions{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));
+  gap:10px;
+  margin-top:15px;
+}
+
+.game-actions .action-btn{
+  justify-content:center;
+  padding:14px 16px;
+  font-size:14px;
+}
+
 @media(max-width:768px){
   .sidebar{
     width:100%;
@@ -545,5 +613,18 @@ hr{
 
   .builder{
     padding:20px;
+  }
+
+  .action-buttons{
+    gap:8px;
+  }
+
+  .action-btn{
+    padding:10px 14px;
+    font-size:13px;
+  }
+
+  .game-actions .action-btn{
+    padding:12px 12px;
   }
 }
