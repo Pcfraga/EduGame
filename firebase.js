@@ -9,7 +9,10 @@ import {
   deleteDoc,
   doc,
   updateDoc,
-  getDoc
+  getDoc,
+  query,
+  orderBy,
+  limit
 } from
 "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -64,6 +67,9 @@ export {
   doc,
   updateDoc,
   getDoc,
+  query,
+  orderBy,
+  limit,
 
   ref,
   uploadBytes,
