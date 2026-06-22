@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
@@ -9,7 +9,7 @@
 
   <title>EduGame - Aprenda Jogando!</title>
 
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="css/style.css">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E%F0%9F%8E%AE%3C/text%3E%3C/svg%3E">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -35,14 +35,6 @@
         🏠 <span>Início</span>
       </button>
 
-      <button class="menu-btn menu-quiz" onclick="showScreen('playQuiz')">
-        🎯 <span>Jogar Quiz</span>
-      </button>
-
-      <button class="menu-btn menu-memory" onclick="showScreen('memoryGame')">
-        🧠 <span>Memória</span>
-      </button>
-
       <button class="menu-btn menu-games" onclick="showScreen('gamesHub')">
         🎮 <span>Jogos</span>
       </button>
@@ -51,18 +43,10 @@
         🏆 <span>Ranking</span>
       </button>
 
-      <hr class="menu-divider">
-
-      <button class="menu-btn menu-create" onclick="showScreen('quizBuilder')">
-        📝 <span>Criar Quiz</span>
-      </button>
+      <hr class="menu-divider"></hr>
 
       <button class="menu-btn menu-create" onclick="showScreen('gameBuilder')">
         🛠️ <span>Criar Jogos</span>
-      </button>
-
-      <button class="menu-btn menu-create" onclick="showScreen('associationBuilder')">
-        🔗 <span>Associação</span>
       </button>
 
       <button class="menu-btn menu-ai" onclick="showScreen('ai')">
@@ -74,289 +58,9 @@
   </div>
 
   <!-- MAIN -->
-  <div class="main">
+  <div class="main" id="main"></div>
 
-    <!-- DASHBOARD -->
-    <section id="dashboard" class="screen active">
-
-      <div class="dashboard-header">
-        <h1>🌟 Bem-vindo ao EduGame! 🌟</h1>
-        <p class="tagline">Escolha um jogo e comece a aprender divertindo-se!</p>
-      </div>
-
-      <div class="cards">
-
-        <div class="card card-quiz clickable" onclick="showScreen('playQuiz')">
-          <div class="card-icon">🎯</div>
-          <h3>Quiz Desafio</h3>
-          <p>Responda perguntas e ganhe pontos!</p>
-          <div class="card-action">Jogar →</div>
-        </div>
-
-        <div class="card card-memory clickable" onclick="showScreen('memoryGame')">
-          <div class="card-icon">🧠</div>
-          <h3>Jogo da Memória</h3>
-          <p>Teste sua memória encontrando os pares!</p>
-          <div class="card-action">Jogar →</div>
-        </div>
-
-        <div class="card card-games clickable" onclick="showScreen('gamesHub')">
-          <div class="card-icon">🎮</div>
-          <h3>Jogos Especiais</h3>
-          <p>Muitos jogos divertidos para explorar!</p>
-          <div class="card-action">Descobrir →</div>
-        </div>
-
-        <div class="card card-ranking clickable" onclick="showScreen('ranking')">
-          <div class="card-icon">🏆</div>
-          <h3>Ranking</h3>
-          <p>Veja como você está no ranking!</p>
-          <div class="card-action">Ver →</div>
-        </div>
-
-      </div>
-
-    </section>
-
-    <!-- QUIZ BUILDER -->
-    <section id="quizBuilder" class="screen">
-
-      <h1>📝 Criador de Quiz</h1>
-
-      <!-- CRIADOR DE PERGUNTAS -->
-      <div class="builder">
-
-        <input type="text" id="question" placeholder="Digite a pergunta">
-
-        <input type="text" id="a" placeholder="Alternativa A">
-
-        <input type="text" id="b" placeholder="Alternativa B">
-
-        <input type="text" id="c" placeholder="Alternativa C">
-
-        <input type="text" id="d" placeholder="Alternativa D">
-
-        <select id="correct">
-
-          <option value="">
-            Resposta correta
-          </option>
-
-          <option>A</option>
-          <option>B</option>
-          <option>C</option>
-          <option>D</option>
-
-        </select>
-
-        <button class="primary" onclick="saveQuestion()">
-          💾 Salvar Pergunta
-        </button>        
-
-      </div>
-
-       <!-- CRIADOR QUIZ -->
-
-       <h2>
-        📚 Criar Quiz com várias perguntas
-      </h2>
-
-      <div class="builder">
-
-        <input type="text" id="quizTitle" placeholder="Nome do Quiz">
-
-        <button class="primary" onclick="loadQuestionsToSelect()">
-          📥 Carregar Perguntas
-        </button>
-
-        <div id="questionsSelect"></div>
-
-        <button class="primary" onclick="saveQuiz()">
-          ✅ Salvar Quiz
-        </button>
-
-      </div>
-
-      <!-- LISTA -->
-      <div id="questions"></div>
-
-      <hr>
-      <h2>🎮 Quizzes Salvos</h2>
-      <div id="savedQuizList"></div>
-
-    </section>           
-      <hr>     
-
-    <!-- PLAY QUIZ -->
-    <section id="playQuiz" class="screen">
-
-      <h1>🎯 Jogar Quiz</h1>
-
-      <!-- NOME -->
-      <div class="builder">
-
-        <input type="text" id="playerName" placeholder="Digite seu nome">
-
-      </div>
-
-      <!-- QUIZZES -->
-      <div id="quizList"></div>
-
-      <!-- QUIZ -->
-      <div id="quizContainer"></div>
-
-    </section>
-
-    <!-- GAMES HUB -->
-    <section id="gamesHub" class="screen">
-
-      <h1>🎮 Centro de Jogos</h1>
-
-      <div class="builder">
-        <input type="text" id="hubPlayerName" placeholder="Digite seu nome">
-      </div>
-
-      <div class="game-hub-summary" id="gameHubSummary"></div>
-
-      <div class="games-grid" id="gamesGrid"></div>
-
-      <div id="gameContainer"></div>
-
-    </section>
-
-    <!-- MEMORY GAME -->
-    <section id="memoryGame" class="screen">
-
-      <h1>🧠 Criador Jogo Memória</h1>
-
-      <div class="builder">
-
-        <input type="text" id="memoryTitle" placeholder="Nome do jogo">
-
-        <input type="file" id="memoryImage" accept="image/*">
-
-        <button type="button" class="primary" onclick="addMemoryCard()">
-          ➕ Adicionar Carta
-        </button>
-
-        <button class="primary" onclick="saveMemoryGame()">
-          💾 Salvar Jogo
-        </button>
-
-      </div>
-
-      <h2>🖼 Preview</h2>
-
-      <div class="memory-grid" id="memoryPreview"></div>
-
-      <hr>
-
-      <h2>🎮 Jogos Salvos</h2>
-
-      <div id="memoryGamesList"></div>
-
-      <hr>
-
-      <div class="memory-grid" id="memoryGrid"></div>
-
-    </section>
-
-    <!-- GAME BUILDER -->
-    <section id="gameBuilder" class="screen">
-
-      <h1>🛠️ Criador de Jogos Personalizados</h1>
-
-      <div class="builder">
-        <label>
-          Tipo de jogo
-          <select id="builderGameType" onchange="renderBuilderForm()">
-            <option value="dragDrop">Arrastar e Soltar</option>
-            <option value="imageQuiz">Quiz com Imagem</option>
-            <option value="completeWord">Complete a Palavra</option>
-            <option value="sequenceLogic">Sequência Lógica</option>
-          </select>
-        </label>
-      </div>
-
-      <div id="builderFormArea"></div>
-
-      <hr>
-
-      <h2>🎮 Jogos Salvos</h2>
-      <div id="savedBuilderGamesList"></div>
-
-    </section>
-
-    <!-- RANKING -->
-    <section id="ranking" class="screen">
-
-      <h1>🏆 Ranking</h1>
-
-      <div id="rankingList"></div>
-
-    </section>
-
-    <!-- IA -->
-    <section id="ai" class="screen">
-
-      <h1>🤖 IA Geradora</h1>
-
-      <div class="builder">
-
-        <textarea id="theme" placeholder="Digite um tema"></textarea>
-
-        <button class="primary" onclick="generateAIQuestion()">
-          ⚡ Gerar
-        </button>
-
-      </div>
-
-      <div id="aiResult"></div>
-
-    </section>
-
-    <!-- ASSOCIATION GAME -->
-
-    <section id="associationBuilder" class="screen">
-
-  <h1>🔗 Criador de Associação de Colunas</h1>
-
-  <input type="text" id="gameTitle" placeholder="Título do jogo">
-
-  <label class="association-mode-label">
-    Tipo de associação
-    <select id="associationMode">
-      <option value="numbers">Numeração</option>
-      <option value="lines">Linhas</option>
-    </select>
-  </label>
-
-  <div id="pairsContainer"></div>
-
-  <button onclick="addPair()">➕ Adicionar Par</button>
-  <button onclick="saveGame()">💾 Salvar Jogo</button>
-
-  <h2>🎮 Jogos Salvos</h2>
-
-  <div id="associationList"></div>
-
-</section>
-
-<section id="associationGame" class="screen">
-
-  <h1>🎮 Jogo de Associação</h1>
-
-  <div id="associationGameContainer"></div>
-
-</section>
-
-
-
-  </div>
-
- 
-
-  <script type="module" src="script.js"></script>
+  <script type="module" src="js/app.js"></script>
 
 </body>
 

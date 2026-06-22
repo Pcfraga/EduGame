@@ -1,0 +1,62 @@
+<section id="quizBuilder" class="screen">
+
+  <h1>📝 Criador de Quiz</h1>
+
+  <div class="builder">
+
+    <input type="text" id="question" placeholder="Digite a pergunta">
+
+    <input type="text" id="a" placeholder="Alternativa A">
+
+    <input type="text" id="b" placeholder="Alternativa B">
+
+    <input type="text" id="c" placeholder="Alternativa C">
+
+    <input type="text" id="d" placeholder="Alternativa D">
+
+    <select id="correct">
+
+      <option value="">
+        Resposta correta
+      </option>
+
+      <option>A</option>
+      <option>B</option>
+      <option>C</option>
+      <option>D</option>
+
+    </select>
+
+    <button class="primary" onclick="saveQuestion()">
+      💾 Salvar Pergunta
+    </button>        
+
+  </div>
+
+  <h2>
+    📚 Criar Quiz com várias perguntas
+  </h2>
+
+  <div class="builder">
+
+    <input type="text" id="quizTitle" placeholder="Nome do Quiz">
+
+    <button class="primary" onclick="loadQuestionsToSelect()">
+      📥 Carregar Perguntas
+    </button>
+
+    <div id="questionsSelect"></div>
+
+    <button class="primary" onclick="saveQuiz()">
+      ✅ Salvar Quiz
+    </button>
+
+  </div>
+
+  <div id="questions"></div>
+
+  <hr>
+  <h2>🎮 Quizzes Salvos</h2>
+  <div id="savedQuizList"></div>
+
+</section>

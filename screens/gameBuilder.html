@@ -1,0 +1,26 @@
+<section id="gameBuilder" class="screen">
+
+  <h1>🛠️ Criador Universal de Jogos</h1>
+
+  <div class="builder">
+    <label>
+      Tipo de jogo
+      <select id="builderGameType" onchange="renderBuilderForm()">
+        <option value="dragDrop">Arrastar e Soltar</option>
+        <option value="imageQuiz">Quiz com Imagem</option>
+        <option value="memory">Memória</option>
+        <option value="association">Associação</option>
+        <option value="completeWord">Complete a Palavra</option>
+        <option value="sequenceLogic">Sequência Lógica</option>
+      </select>
+    </label>
+  </div>
+
+  <div id="builderFormArea"></div>
+
+  <hr>
+
+  <h2>🎮 Jogos Salvos</h2>
+  <div id="savedBuilderGamesList"></div>
+
+</section>

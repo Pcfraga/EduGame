@@ -1,0 +1,36 @@
+<section id="memoryGame" class="screen">
+
+  <h1>🧠 Criador Jogo Memória</h1>
+
+  <div class="builder">
+
+    <input type="text" id="memoryTitle" placeholder="Nome do jogo">
+
+    <input type="file" id="memoryImage" accept="image/*">
+
+    <button type="button" class="primary" onclick="addMemoryCard()">
+      ➕ Adicionar Carta
+    </button>
+
+    <button class="primary" onclick="saveMemoryGame()">
+      💾 Salvar Jogo
+    </button>
+
+  </div>
+
+  <h2>🖼 Preview</h2>
+
+  <div class="memory-grid" id="memoryPreview"></div>
+
+  <hr>
+
+  <h2>🎮 Jogos Salvos</h2>
+
+  <div id="memoryGamesList"></div>
+
+  <hr>
+
+  <div class="memory-info" id="memoryInfo"></div>
+  <div class="memory-grid" id="memoryGrid"></div>
+
+</section>

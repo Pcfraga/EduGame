@@ -1,0 +1,28 @@
+<section id="associationBuilder" class="screen">
+
+  <h1>🔗 Criar Jogo de Associação</h1>
+
+  <div class="builder">
+    <input type="text" id="gameTitle" placeholder="Título do jogo">
+
+    <label class="association-mode-label">
+      Tipo de associação
+      <select id="associationMode">
+        <option value="numbers">Numeração</option>
+        <option value="lines">Linhas</option>
+      </select>
+    </label>
+
+    <div id="pairsContainer"></div>
+
+    <div class="association-actions">
+      <button type="button" class="primary" onclick="addPair()">➕ Adicionar Par</button>
+      <button type="button" class="primary" onclick="saveGame()">💾 Salvar Jogo</button>
+    </div>
+  </div>
+
+  <h2>🎮 Jogos Salvos</h2>
+
+  <div id="associationList"></div>
+
+</section>
