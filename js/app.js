@@ -902,17 +902,20 @@ function updateBuilderDragDropLists(){
   status.textContent = builderGameState.status;
 }
 
-function resetBuilderDragDropGame(){
+window.resetBuilderDragDropGame = function(){
   if(!builderGameState) return;
   renderBuilderPlayArea(builderGameState.game, builderGameState.cardId);
-}
+};
 
 function renderBuilderImageQuizGame(game){
   const content = document.getElementById("builderPlayContent");
   if(!content) return;
+
+  const questions = Array.isArray(game.data?.questions) ? game.data.questions : [];
   builderGameState.answered = false;
   builderGameState.status = "Escolha a resposta correta.";
   builderGameState.currentQuestionIndex = 0;
+  builderGameState.questions = questions;
 
   content.innerHTML = `
     <img src="${game.data.image}" alt="Imagem do quiz" style="width:100%; max-width:400px; border-radius:18px; margin:16px auto; display:block;">
@@ -921,24 +924,39 @@ function renderBuilderImageQuizGame(game){
     <button type="button" class="primary" onclick="renderBuilderPlayArea(builderGameState.game, builderGameState.cardId)">Reiniciar</button>
   `;
 
+  if(questions.length === 0){
+    const area = document.getElementById("builderImageQuizQuestionArea");
+    if(area){
+      area.innerHTML = `<p class="quiz-warning">Nenhuma pergunta disponível para este quiz com imagem.</p>`;
+    }
+    return;
+  }
+
   renderCurrentImageQuizQuestion();
 }
 
 function renderCurrentImageQuizQuestion(){
   const area = document.getElementById("builderImageQuizQuestionArea");
-  if(!area || !builderGameState?.game?.data?.questions) return;
+  const questions = Array.isArray(builderGameState?.questions)
+    ? builderGameState.questions
+    : Array.isArray(builderGameState?.game?.data?.questions)
+      ? builderGameState.game.data.questions
+      : [];
 
-  const questions = builderGameState.game.data.questions;
+  if(!area || questions.length === 0) return;
+
   const index = builderGameState.currentQuestionIndex || 0;
   const current = questions[index];
   if(!current) return;
 
   area.innerHTML = `
     <p>${current.question}</p>
-    <button class="option" onclick="answerBuilderImageQuiz('A')">A) ${current.a}</button>
-    <button class="option" onclick="answerBuilderImageQuiz('B')">B) ${current.b}</button>
-    <button class="option" onclick="answerBuilderImageQuiz('C')">C) ${current.c}</button>
-    <button class="option" onclick="answerBuilderImageQuiz('D')">D) ${current.d}</button>
+    <div class="options">
+      <button class="option" onclick="answerBuilderImageQuiz('A')">A) ${current.a}</button>
+      <button class="option" onclick="answerBuilderImageQuiz('B')">B) ${current.b}</button>
+      <button class="option" onclick="answerBuilderImageQuiz('C')">C) ${current.c}</button>
+      <button class="option" onclick="answerBuilderImageQuiz('D')">D) ${current.d}</button>
+    </div>
   `;
 }
 
