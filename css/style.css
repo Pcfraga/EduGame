@@ -563,9 +563,6 @@ button.primary:active{
   color:#5b3eb5;
   margin:0;
 }
-  width:auto;
-  min-width:180px;
-}
 
 .association-game-card {
   padding: 16px;
