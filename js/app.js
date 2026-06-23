@@ -187,6 +187,13 @@ window.renderBuilderForm = function(){
       `;
       break;
 
+    case "quiz":
+      html += `
+        <div id="builderQuizQuestions"></div>
+        <button type="button" class="primary" onclick="builderAddQuizQuestion()">➕ Adicionar Pergunta</button>
+      `;
+      break;
+
     case "completeWord":
       html += `
         <input type="text" id="builderCompleteSentence" placeholder="Frase com lacuna usando ___" class="builder-input">
@@ -268,8 +275,50 @@ window.builderAddImageQuizQuestion = function(questionData = {}){
   updateImageQuizQuestionTitles();
 };
 
+window.builderAddQuizQuestion = function(questionData = {}){
+  const container = document.getElementById("builderQuizQuestions");
+  if(!container) return;
+
+  const questionIndex = container.children.length + 1;
+  const question = questionData.question || "";
+  const a = questionData.a || "";
+  const b = questionData.b || "";
+  const c = questionData.c || "";
+  const d = questionData.d || "";
+  const correct = questionData.correct || "";
+
+  const item = document.createElement("div");
+  item.className = "quiz-question-card";
+  item.innerHTML = `
+    <h4>Pergunta ${questionIndex}</h4>
+    <textarea class="builder-input quiz-question-text" placeholder="Pergunta">${question}</textarea>
+    <input type="text" class="builder-input quiz-option-a" placeholder="Alternativa A" value="${a}">
+    <input type="text" class="builder-input quiz-option-b" placeholder="Alternativa B" value="${b}">
+    <input type="text" class="builder-input quiz-option-c" placeholder="Alternativa C" value="${c}">
+    <input type="text" class="builder-input quiz-option-d" placeholder="Alternativa D" value="${d}">
+    <select class="builder-input quiz-question-correct">
+      <option value="">Resposta correta</option>
+      <option value="A" ${correct === "A" ? "selected" : ""}>A</option>
+      <option value="B" ${correct === "B" ? "selected" : ""}>B</option>
+      <option value="C" ${correct === "C" ? "selected" : ""}>C</option>
+      <option value="D" ${correct === "D" ? "selected" : ""}>D</option>
+    </select>
+    <button type="button" class="secondary" onclick="this.closest('.quiz-question-card').remove(); updateQuizQuestionTitles();">Remover pergunta</button>
+  `;
+
+  container.appendChild(item);
+  updateQuizQuestionTitles();
+};
+
 function updateImageQuizQuestionTitles(){
   document.querySelectorAll(".image-quiz-question-card").forEach((card, index) => {
+    const title = card.querySelector("h4");
+    if(title) title.textContent = `Pergunta ${index + 1}`;
+  });
+}
+
+function updateQuizQuestionTitles(){
+  document.querySelectorAll(".quiz-question-card").forEach((card, index) => {
     const title = card.querySelector("h4");
     if(title) title.textContent = `Pergunta ${index + 1}`;
   });
@@ -304,21 +353,46 @@ window.saveBuilderGame = async function(){
       data = { pairs };
       break;
 
+    case "quiz":
+      const quizCards = Array.from(document.querySelectorAll(".quiz-question-card"));
+      const quizQuestions = quizCards.map((card, index) => ({
+        index: index + 1,
+        question: card.querySelector(".quiz-question-text")?.value.trim(),
+        a: card.querySelector(".quiz-option-a")?.value.trim(),
+        b: card.querySelector(".quiz-option-b")?.value.trim(),
+        c: card.querySelector(".quiz-option-c")?.value.trim(),
+        d: card.querySelector(".quiz-option-d")?.value.trim(),
+        correct: card.querySelector(".quiz-question-correct")?.value,
+      }));
+      const validQuizQuestions = quizQuestions.filter(q => q.question && q.a && q.b && q.c && q.d && q.correct);
+      if(!validQuizQuestions.length){
+        const firstInvalid = quizQuestions[0];
+        const invalidIndex = firstInvalid ? firstInvalid.index : 1;
+        alert(`Questão ${invalidIndex} está incompleta. Preencha a pergunta, as 4 alternativas e selecione a resposta correta.`);
+        return;
+      }
+      data = { questions: validQuizQuestions };
+      break;
+
     case "imageQuiz":
       const image = document.getElementById("builderImageQuizImage")?.value.trim();
       const fileInput = document.getElementById("builderImageQuizFile");
       const file = fileInput?.files?.[0];
       const questionCards = Array.from(document.querySelectorAll(".image-quiz-question-card"));
-      const questions = questionCards.map(card => ({
+      const questions = questionCards.map((card, index) => ({
+        index: index + 1,
         question: card.querySelector(".image-quiz-question-text")?.value.trim(),
         a: card.querySelectorAll(".image-quiz-option")[0]?.value.trim(),
         b: card.querySelectorAll(".image-quiz-option")[1]?.value.trim(),
         c: card.querySelectorAll(".image-quiz-option")[2]?.value.trim(),
         d: card.querySelectorAll(".image-quiz-option")[3]?.value.trim(),
         correct: card.querySelector(".image-quiz-correct")?.value,
-      })).filter(q => q.question && q.a && q.b && q.c && q.d && q.correct);
-      if(!questions.length){
-        alert("Adicione pelo menos uma pergunta válida para o quiz com imagem.");
+      }));
+      const validImageQuestions = questions.filter(q => q.question && q.a && q.b && q.c && q.d && q.correct);
+      if(!validImageQuestions.length){
+        const firstInvalid = questions[0];
+        const invalidIndex = firstInvalid ? firstInvalid.index : 1;
+        alert(`Questão ${invalidIndex} está incompleta. Preencha a pergunta, as 4 alternativas e selecione a resposta correta.`);
         return;
       }
       let imageUrl = image;
@@ -423,6 +497,117 @@ window.saveBuilderGame = async function(){
   }
 };
 
+window.generateAndSaveBuilderGame = async function(){
+  const type = document.getElementById("builderGameType")?.value;
+  const titleField = document.getElementById("builderGameTitle");
+  const titleText = titleField?.value.trim();
+  const hints = document.getElementById("builderAutoHints")?.value.trim();
+  const resultArea = document.getElementById("builderAutoResult");
+
+  if(!hints){
+    alert("Digite algumas dicas para gerar um jogo.");
+    return;
+  }
+
+  let data = null;
+  let generatedTitle = titleText || "Jogo Automático";
+  const parsedPairs = parseBuilderAutoHints(hints);
+
+  if(type === "quiz"){
+    const questions = generateQuizQuestionsFromHints(parsedPairs);
+    if(questions.length === 0){
+      alert("Forneça pelo menos uma linha no formato termo - resposta para gerar um quiz.");
+      return;
+    }
+    data = { questions };
+    generatedTitle = titleText || `Quiz gerado: ${parsedPairs[0]?.left || 'Novo Quiz'}`;
+  } else if(type === "association" || type === "dragDrop"){
+    if(parsedPairs.length === 0){
+      alert("Forneça pelo menos um par no formato termo - resposta para gerar um jogo.");
+      return;
+    }
+    data = { pairs: parsedPairs };
+    generatedTitle = titleText || (type === "association" ? "Jogo de Associação Gerado" : "Jogo de Arrastar e Soltar Gerado");
+  } else if(type === "completeWord"){
+    if(parsedPairs.length === 0){
+      alert("Forneça pelo menos uma linha no formato termo - resposta para gerar um jogo Complete a Palavra.");
+      return;
+    }
+    const first = parsedPairs[0];
+    const sentence = first.left.includes('___') ? first.left : `${first.left} ___`;
+    data = { sentence, answer: first.right, hint: `Complete a palavra com ${first.right}.` };
+    generatedTitle = titleText || `Complete a Palavra: ${first.right}`;
+  } else {
+    alert("Selecione um tipo de jogo suportado para geração automática (Quiz, Associação, Arrastar e Soltar ou Complete a Palavra).");
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, "builder_games"), {
+      title: generatedTitle,
+      type,
+      data,
+      createdAt: new Date()
+    });
+
+    if(resultArea){
+      resultArea.innerHTML = `<p>✅ Jogo salvo como <strong>${generatedTitle}</strong>.</p>`;
+    }
+    if(titleField && !titleText){
+      titleField.value = generatedTitle;
+    }
+
+    await loadBuilderGames();
+  } catch(error){
+    console.error("ERRO AO GERAR E SALVAR BUILDER GAME:", error);
+    alert("Erro ao gerar jogo: " + error.message);
+  }
+};
+
+function parseBuilderAutoHints(text){
+  return text
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(Boolean)
+    .map(line => {
+      const parts = line.split('-');
+      if(parts.length < 2) return null;
+      const left = parts[0].trim();
+      const right = parts.slice(1).join('-').trim();
+      return left && right ? { left, right } : null;
+    })
+    .filter(Boolean);
+}
+
+function generateQuizQuestionsFromHints(pairs){
+  const answers = pairs.map(pair => pair.right);
+  return pairs.map(pair => {
+    const questionText = pair.left.includes('?') ? pair.left : `Qual é a resposta para "${pair.left}"?`;
+    const wrongAnswers = shuffleArray(answers.filter(answer => answer !== pair.right));
+    const options = [pair.right, ...wrongAnswers].slice(0, 4);
+    while(options.length < 4){
+      const filler = `Outra opção ${options.length + 1}`;
+      if(!options.includes(filler)){
+        options.push(filler);
+      }
+    }
+    const shuffled = shuffleArray(options);
+    const correctLetter = ["A", "B", "C", "D"][shuffled.indexOf(pair.right)];
+    return {
+      question: questionText,
+      a: shuffled[0] || "",
+      b: shuffled[1] || "",
+      c: shuffled[2] || "",
+      d: shuffled[3] || "",
+      correct: correctLetter || "A"
+    };
+  });
+}
+
+function shuffleArray(array){
+  return array.slice().sort(() => Math.random() - 0.5);
+}
+
 async function loadBuilderGames(){
   const container = document.getElementById("savedBuilderGamesList");
   if(!container) return;
@@ -440,6 +625,7 @@ async function loadBuilderGames(){
 
     const typeLabels = {
       dragDrop: "Arrastar e Soltar",
+      quiz: "Quiz sem Imagem",
       imageQuiz: "Quiz com Imagem",
       memory: "Memória",
       association: "Associação",
@@ -536,6 +722,15 @@ window.editBuilderGame = async function(id){
       }
     }
 
+    if(game.type === "quiz"){
+      const questions = game.data.questions || [];
+      const questionsContainer = document.getElementById("builderQuizQuestions");
+      if(questionsContainer){
+        questionsContainer.innerHTML = "";
+        questions.forEach(question => builderAddQuizQuestion(question));
+      }
+    }
+
     if(game.type === "memory"){
       memoryBuilderCards = game.data.cards || [];
       renderMemoryPreview();
@@ -622,6 +817,10 @@ window.renderBuilderPlayArea = function(game, cardId){
 
     case "association":
       renderBuilderAssociationGame(game);
+      break;
+
+    case "quiz":
+      renderBuilderQuiz(game);
       break;
 
     case "imageQuiz":
@@ -935,6 +1134,33 @@ function renderBuilderImageQuizGame(game){
   renderCurrentImageQuizQuestion();
 }
 
+function renderBuilderQuiz(game){
+  const content = document.getElementById("builderPlayContent");
+  if(!content) return;
+
+  const questions = Array.isArray(game.data?.questions) ? game.data.questions : [];
+  builderGameState.answered = false;
+  builderGameState.status = "Escolha a resposta correta.";
+  builderGameState.currentQuestionIndex = 0;
+  builderGameState.questions = questions;
+
+  content.innerHTML = `
+    <div id="builderImageQuizQuestionArea"></div>
+    <div id="builderPlayStatus" class="association-status">${builderGameState.status}</div>
+    <button type="button" class="primary" onclick="renderBuilderPlayArea(builderGameState.game, builderGameState.cardId)">Reiniciar</button>
+  `;
+
+  if(questions.length === 0){
+    const area = document.getElementById("builderImageQuizQuestionArea");
+    if(area){
+      area.innerHTML = `<p class="quiz-warning">Nenhuma pergunta disponível para este quiz.</p>`;
+    }
+    return;
+  }
+
+  renderCurrentImageQuizQuestion();
+}
+
 function renderCurrentImageQuizQuestion(){
   const area = document.getElementById("builderImageQuizQuestionArea");
   const questions = Array.isArray(builderGameState?.questions)
@@ -1216,6 +1442,7 @@ async function loadGameHub(){
 
       const typeLabels = {
         dragDrop: "Arrastar e Soltar",
+        quiz: "Quiz sem Imagem",
         imageQuiz: "Quiz com Imagem",
         memory: "Memória",
         association: "Associação",
@@ -1485,22 +1712,235 @@ function clearForm(){
 // ==========================
 window.generateAIQuestion = function(){
 
-  let theme = document.getElementById('theme').value;
+  const themeInput = document.getElementById('theme');
+  const difficultyInput = document.getElementById('aiDifficulty');
+  const theme = (themeInput?.value || '').trim();
+  const difficulty = (difficultyInput?.value || 'medium');
 
-  let question = `
+  if(!theme){
+    alert('Digite um tema para gerar a pergunta.');
+    return;
+  }
+
+  // Geração simples e determinística de alternativas
+  const safeTheme = theme.replace(/\s+/g, ' ').trim();
+
+  let qText = '';
+  if(difficulty === 'easy'){
+    qText = `O que é ${safeTheme}?`;
+  } else if(difficulty === 'hard'){
+    qText = `Qual afirmação abaixo é correta sobre ${safeTheme}?`;
+  } else {
+    qText = `Qual é a definição mais adequada de ${safeTheme}?`;
+  }
+
+  const a = `${safeTheme} é a definição correta e mais comum relacionada ao termo.`;
+  const b = `${safeTheme} refere-se a um aspecto relacionado, mas não é a definição correta.`;
+  const c = `Um conceito frequentemente confundido com ${safeTheme}, porém diferente.`;
+  const d = `Uma alternativa incorreta ou não relacionada a ${safeTheme}.`;
+
+  const generated = {
+    question: qText,
+    a, b, c, d,
+    correct: 'A',
+    metadata: { theme: safeTheme, difficulty }
+  };
+
+  // Salva em variável global temporária para o botão "Salvar"
+  window.lastGeneratedAIQuestion = generated;
+
+  const html = `
     <div class="question-card">
-
-      <h3>Pergunta sobre ${theme}</h3>
-
-      <div class="option">Opção A</div>
-      <div class="option">Opção B</div>
-      <div class="option">Opção C</div>
-      <div class="option">Opção D</div>
-
+      <h3>${generated.question}</h3>
+      <button class="option">A) ${generated.a}</button>
+      <button class="option">B) ${generated.b}</button>
+      <button class="option">C) ${generated.c}</button>
+      <button class="option">D) ${generated.d}</button>
+      <div style="margin-top:12px; display:flex; gap:8px;">
+        <button class="primary" onclick="saveGeneratedQuestion()">💾 Salvar pergunta</button>
+        <button class="secondary" onclick="document.getElementById('aiResult').innerHTML = ''">✖ Limpar</button>
+      </div>
     </div>
   `;
 
-  document.getElementById('aiResult').innerHTML = question;
+  const result = document.getElementById('aiResult');
+  if(result) result.innerHTML = html;
+};
+
+window.saveGeneratedQuestion = async function(){
+  const gen = window.lastGeneratedAIQuestion;
+  if(!gen){
+    alert('Nenhuma pergunta gerada para salvar.');
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, 'questions'), {
+      question: gen.question,
+      a: gen.a,
+      b: gen.b,
+      c: gen.c,
+      d: gen.d,
+      correct: gen.correct,
+      createdAt: new Date(),
+      aiGenerated: true,
+      aiMetadata: gen.metadata
+    });
+
+    alert('✅ Pergunta gerada salva com sucesso!');
+    // Atualiza lista local
+    await loadQuestions();
+    document.getElementById('aiResult').innerHTML = '';
+    window.lastGeneratedAIQuestion = null;
+  } catch(error){
+    console.error('ERRO AO SALVAR PERGUNTA GERADA:', error);
+    alert('Erro ao salvar pergunta: ' + (error.message || error.toString()));
+  }
+};
+
+// ==========================
+// GERAR JOGO A PARTIR DE DICAS
+// ==========================
+window.generateAIGameFromHints = async function(){
+
+  const raw = document.getElementById('aiGameHints')?.value || '';
+  const type = document.getElementById('aiGameType')?.value || 'association';
+  const title = (document.getElementById('aiGameTitle')?.value || '').trim() || `Jogo criado: ${new Date().toLocaleString()}`;
+
+  if(!raw.trim()){
+    alert('Insira pelo menos uma dica para gerar o jogo.');
+    return;
+  }
+
+  // Parse hints: accept lines in form "left - right" or single words
+  const lines = raw.split('\n').map(l=>l.trim()).filter(Boolean);
+  const pairs = [];
+
+  lines.forEach(line => {
+    const sep = line.split('-');
+    if(sep.length >= 2){
+      const left = sep[0].trim();
+      const right = sep.slice(1).join('-').trim();
+      if(left && right) pairs.push({ left, right });
+    } else {
+      // fallback: duplicate term as pair
+      const term = line.trim();
+      pairs.push({ left: term, right: term });
+    }
+  });
+
+  if(pairs.length === 0){
+    alert('Nenhum par válido nas dicas. Use o formato "esquerda - direita" em cada linha.');
+    return;
+  }
+
+  // Build game object depending on type
+  let gameData = {};
+
+  if(type === 'association' || type === 'dragDrop'){
+    gameData = { pairs };
+  } else if(type === 'completeWord'){
+    // use first pair: left = sentence with ___, right = answer
+    const p = pairs[0];
+    gameData = { sentence: p.left.includes('___') ? p.left : (p.left + ' ___'), answer: p.right, hint: 'Complete a palavra' };
+  } else if(type === 'sequenceLogic'){
+    gameData = { sequence: pairs.map(p => p.left), hint: 'Ordene corretamente' };
+  } else if(type === 'quiz'){
+    const questions = pairs.map((p, i) => ({ question: `Sobre ${p.left}: escolha a resposta correta.`, a: p.right, b: 'Opção B', c: 'Opção C', d: 'Opção D', correct: 'A' }));
+    gameData = { questions };
+  } else if(type === 'imageQuiz'){
+    // create a simple image quiz with questions from hints (no images generated)
+    const questions = pairs.map((p, i) => ({ question: `Sobre ${p.left}: escolha a resposta correta.`, a: p.right, b: 'Opção B', c: 'Opção C', d: 'Opção D', correct: 'A' }));
+    gameData = { image: '', questions };
+  }
+
+  // Preview and save (render safe HTML and attach listener)
+  const resultDiv = document.getElementById('aiGameResult');
+  if(resultDiv){
+    const btnId = 'saveAIGameBtn_' + Date.now();
+    resultDiv.innerHTML = `<div class="question-card"><h3>Preview: ${escapeHtml(title)}</h3><pre style="white-space:pre-wrap;">${escapeHtml(JSON.stringify(gameData, null, 2))}</pre><div style="margin-top:8px;"><button id="${btnId}" class='primary' data-game-type="${escapeHtml(type)}" data-game-title="${encodeURIComponent(title)}">💾 Salvar jogo</button></div></div>`;
+    const btn = document.getElementById(btnId);
+    if(btn){
+      btn.addEventListener('click', ()=>{
+        const gType = btn.dataset.gameType;
+        const gTitle = decodeURIComponent(btn.dataset.gameTitle || '');
+        saveAIGame(gType, gTitle);
+      });
+    }
+  }
+};
+
+// GERA JOGO A PARTIR DO TEMA (heurística simples)
+window.generateAIGameFromTheme = async function(){
+  const theme = (document.getElementById('theme')?.value || '').trim();
+  const type = document.getElementById('aiGameType')?.value || 'association';
+  const title = (document.getElementById('aiGameTitle')?.value || '').trim() || `Jogo: ${theme}`;
+
+  if(!theme){
+    alert('Digite um tema para criar o jogo.');
+    return;
+  }
+
+  // Heurística: extrair palavras-chave do tema (split por vírgula/espaco)
+  const tokens = theme.split(/[,;\-\/]+|\s+/).map(t=>t.trim()).filter(Boolean).slice(0,10);
+
+  if(tokens.length === 0){
+    alert('Tema insuficiente para gerar conteúdo.');
+    return;
+  }
+
+  // Construir pares simples: token => descrição genérica
+  const pairs = tokens.map(t => ({ left: t, right: `Definição de ${t}` }));
+
+  // Se tipo for completeWord, usar o primeiro token como lacuna
+  let gameData = {};
+  if(type === 'association' || type === 'dragDrop') gameData = { pairs };
+  else if(type === 'completeWord') gameData = { sentence: `Complete: ${tokens[0]} ___`, answer: tokens[1] || tokens[0], hint: `Dica sobre ${tokens[0]}` };
+  else if(type === 'sequenceLogic') gameData = { sequence: tokens, hint: `Ordene os termos relacionados a ${theme}` };
+  else if(type === 'imageQuiz') gameData = { image: '', questions: tokens.map(t => ({ question: `O que melhor descreve ${t}?`, a: `Definição de ${t}`, b: 'Opção B', c: 'Opção C', d: 'Opção D', correct: 'A' })) };
+
+  // Mostrar preview e permitir salvar
+  const resultDiv = document.getElementById('aiGameResult');
+  if(resultDiv){
+    const btnId = 'saveAIGameBtn_' + Date.now();
+    resultDiv.innerHTML = `<div class="question-card"><h3>Preview: ${escapeHtml(title)}</h3><pre style="white-space:pre-wrap;">${escapeHtml(JSON.stringify(gameData, null, 2))}</pre><div style="margin-top:8px;"><button id="${btnId}" class='primary'>💾 Salvar jogo</button></div></div>`;
+    const btn = document.getElementById(btnId);
+    if(btn) btn.addEventListener('click', ()=> saveAIGame(type, title));
+  }
+};
+
+function escapeHtml(str){
+  if(!str) return '';
+  return String(str).replace(/[&<>"']/g, function(s){
+    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]);
+  });
+}
+
+window.saveAIGame = async function(type, title){
+  try {
+    const raw = document.getElementById('aiGameHints')?.value || '';
+    const lines = raw.split('\n').map(l=>l.trim()).filter(Boolean);
+    const pairs = lines.map(line => {
+      const sep = line.split('-');
+      if(sep.length >= 2) return { left: sep[0].trim(), right: sep.slice(1).join('-').trim() };
+      return { left: line.trim(), right: line.trim() };
+    });
+
+    let data = {};
+    if(type === 'association' || type === 'dragDrop') data = { pairs };
+    else if(type === 'completeWord') data = { sentence: pairs[0].left.includes('___') ? pairs[0].left : (pairs[0].left + ' ___'), answer: pairs[0].right, hint: 'Complete a palavra' };
+    else if(type === 'sequenceLogic') data = { sequence: pairs.map(p => p.left), hint: 'Ordene corretamente' };
+  else if(type === 'quiz') data = { questions: pairs.map(p => ({ question: `Sobre ${p.left}: escolha a resposta correta.`, a: p.right, b: 'Opção B', c: 'Opção C', d: 'Opção D', correct: 'A' })) };
+
+    await addDoc(collection(db, 'builder_games'), { title, type, data, createdAt: new Date() });
+    alert('✅ Jogo salvo com sucesso!');
+    document.getElementById('aiGameResult').innerHTML = '';
+    document.getElementById('aiGameHints').value = '';
+    await loadBuilderGames();
+  } catch(error){
+    console.error('ERRO AO SALVAR JOGO IA:', error);
+    alert('Erro ao salvar jogo: ' + (error.message || error.toString()));
+  }
 };
 
 // ==========================
@@ -2293,17 +2733,6 @@ async function loadMemoryGames(){
       error
     );
   }
-}
-
-function shuffleArray(array){
-
-  console.log(
-    "🔀 SHUFFLE ARRAY"
-  );
-
-  return [...array].sort(
-    () => Math.random() - 0.5
-  );
 }
 
 window.playMemoryGame = async function(id){

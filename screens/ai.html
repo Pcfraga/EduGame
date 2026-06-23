@@ -3,15 +3,52 @@
   <h1>🤖 IA Geradora</h1>
 
   <div class="builder">
-
     <textarea id="theme" placeholder="Digite um tema"></textarea>
 
-    <button class="primary" onclick="generateAIQuestion()">
-      ⚡ Gerar
-    </button>
+    <div style="display:flex; gap:8px; align-items:center; margin-top:8px;">
+      <select id="aiDifficulty" class="builder-input" style="width:160px;">
+        <option value="easy">Fácil</option>
+        <option value="medium" selected>Médio</option>
+        <option value="hard">Difícil</option>
+      </select>
+      <button class="primary" onclick="generateAIQuestion()">
+        ⚡ Gerar
+      </button>
+
+      <button class="primary" style="margin-left:6px;" onclick="generateAIGameFromTheme()">
+        🛠️ Criar jogo pelo tema
+      </button>
+    </div>
 
   </div>
 
   <div id="aiResult"></div>
 
+  <hr style="margin:18px 0; opacity:0.08;" />
+
+  <h2>Criar jogo a partir de dicas</h2>
+
+  <div class="builder">
+
+    <input id="aiGameTitle" class="builder-input" placeholder="Título do jogo (opcional)">
+
+    <select id="aiGameType" class="builder-input" style="width:220px; margin-top:8px;">
+      <option value="association">Associação (texto)</option>
+      <option value="dragDrop">Arrastar e Soltar (texto)</option>
+      <option value="quiz">Quiz sem Imagem</option>
+      <option value="completeWord">Complete a Palavra</option>
+      <option value="sequenceLogic">Sequência Lógica</option>
+      <option value="imageQuiz">Quiz com Imagem (não gerará imagens)</option>
+    </select>
+
+    <textarea id="aiGameHints" placeholder="Insira dicas ou linhas (uma por linha). Ex: termo1 - resposta1\ntermo2 - resposta2" style="margin-top:8px;"></textarea>
+
+    <div style="display:flex; gap:8px; margin-top:8px;">
+      <button class="primary" onclick="generateAIGameFromHints()">🛠️ Criar jogo a partir das dicas</button>
+      <button class="secondary" onclick="document.getElementById('aiGameHints').value = ''">✖ Limpar dicas</button>
+    </div>
+
+  </div>
+
+  <div id="aiGameResult" style="margin-top:12px;"></div>
 </section>

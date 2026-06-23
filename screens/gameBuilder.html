@@ -8,6 +8,7 @@
       <select id="builderGameType" onchange="renderBuilderForm()">
         <option value="dragDrop">Arrastar e Soltar</option>
         <option value="imageQuiz">Quiz com Imagem</option>
+        <option value="quiz">Quiz sem Imagem</option>
         <option value="memory">Memória</option>
         <option value="association">Associação</option>
         <option value="completeWord">Complete a Palavra</option>
@@ -17,6 +18,13 @@
   </div>
 
   <div id="builderFormArea"></div>
+
+  <div class="builder" style="margin-top:24px;">
+    <h2>⚡ Gerar jogo automaticamente</h2>
+    <textarea id="builderAutoHints" placeholder="Use dicas ou pares no formato: termo - resposta, uma linha por par" style="min-height:120px;"></textarea>
+    <button class="primary" onclick="generateAndSaveBuilderGame()">Gerar e salvar jogo</button>
+    <div id="builderAutoResult"></div>
+  </div>
 
   <hr>
 
