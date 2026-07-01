@@ -1456,8 +1456,8 @@ function renderAssociationLineGame(container, title, pairs, prefix){
 }
 
 function renderAssociationNumberGame(container, title, pairs, prefix){
-  const leftItems = shuffleArray(pairs.map(pair => ({ id: pair.id, number: pair.id + 1, text: pair.left })));
-  const rightItems = shuffleArray(pairs.map(pair => ({ id: pair.id, number: pair.id + 1, text: pair.right })));
+  const leftItems = shuffleArray(pairs.map(pair => ({ id: pair.id, number: pair.id + 1, text: pair.left, matched: false })));
+  const rightItems = shuffleArray(pairs.map(pair => ({ id: pair.id, number: pair.id + 1, text: pair.right, matched: false })));
   let selectedLeftId = null;
   let matchedPairs = 0;
 
@@ -1501,10 +1501,13 @@ function renderAssociationNumberGame(container, title, pairs, prefix){
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'association-option association-option-number';
-      button.innerHTML = `<span class="association-number">${item.number}</span><span>${escapeHtml(item.text)}</span>`;
+      button.innerHTML = `<span>${escapeHtml(item.text)}</span>`;
       button.dataset.leftId = item.id;
-      if (selectedLeftId === item.id) button.classList.add('selected');
+      button.disabled = item.matched;
+      if (selectedLeftId === item.id && !item.matched) button.classList.add('selected');
+      if (item.matched) button.classList.add('association-option-blocked');
       button.onclick = () => {
+        if (item.matched) return;
         selectedLeftId = item.id;
         updateStatus('Agora escolha o item correspondente da direita.');
         renderLists();
@@ -1516,17 +1519,22 @@ function renderAssociationNumberGame(container, title, pairs, prefix){
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'association-option association-option-number';
-      button.innerHTML = `<span class="association-number">${item.number}</span><span>${escapeHtml(item.text)}</span>`;
+      button.innerHTML = `<span>${escapeHtml(item.text)}</span>`;
       button.dataset.rightId = item.id;
+      button.disabled = item.matched;
+      if (item.matched) button.classList.add('association-option-blocked');
       button.onclick = () => {
+        if (item.matched) return;
         if (selectedLeftId === null) {
           updateStatus('Selecione um item à esquerda primeiro.');
           return;
         }
         if (selectedLeftId === item.id) {
           matchedPairs += 1;
-          leftItems.splice(leftItems.findIndex(i => i.id === selectedLeftId), 1);
-          rightItems.splice(rightItems.findIndex(i => i.id === item.id), 1);
+          const leftItem = leftItems.find(i => i.id === selectedLeftId);
+          const rightItem = rightItems.find(i => i.id === item.id);
+          if (leftItem) leftItem.matched = true;
+          if (rightItem) rightItem.matched = true;
           updateStatus(matchedPairs === pairs.length ? '🎉 Parabéns! Todos os pares foram conectados.' : '✅ Correto! Continue conectando.');
         } else {
           updateStatus('❌ Errado. Tente novamente.');
@@ -1543,8 +1551,8 @@ function renderAssociationNumberGame(container, title, pairs, prefix){
   }
 
   resetButton.onclick = () => {
-    leftItems.splice(0, leftItems.length, ...shuffleArray(pairs.map(pair => ({ id: pair.id, number: pair.id + 1, text: pair.left }))));
-    rightItems.splice(0, rightItems.length, ...shuffleArray(pairs.map(pair => ({ id: pair.id, number: pair.id + 1, text: pair.right }))));
+    leftItems.splice(0, leftItems.length, ...shuffleArray(pairs.map(pair => ({ id: pair.id, number: pair.id + 1, text: pair.left, matched: false }))));
+    rightItems.splice(0, rightItems.length, ...shuffleArray(pairs.map(pair => ({ id: pair.id, number: pair.id + 1, text: pair.right, matched: false }))));
     selectedLeftId = null;
     matchedPairs = 0;
     updateStatus('Escolha um item à esquerda e depois o item correspondente à direita.');
@@ -3579,8 +3587,8 @@ window.playAssociationGame = async function(id) {
   }));
 
   const mode = selectedGame.mode || 'lines';
-  const leftItems = shuffleArray(pairs.map(pair => ({ id: pair.id, number: pair.id + 1, text: pair.left })));
-  const rightItems = shuffleArray(pairs.map(pair => ({ id: pair.id, number: pair.id + 1, text: pair.right })));
+  const leftItems = shuffleArray(pairs.map(pair => ({ id: pair.id, number: pair.id + 1, text: pair.left, matched: false })));
+  const rightItems = shuffleArray(pairs.map(pair => ({ id: pair.id, number: pair.id + 1, text: pair.right, matched: false })));
   let matchedPairs = 0;
 
   container.innerHTML = `
@@ -3621,8 +3629,11 @@ window.playAssociationGame = async function(id) {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'association-option association-option-number';
-        button.innerHTML = `<span class="association-number">${item.number}</span><span>${escapeHtml(item.text)}</span>`;
+        button.innerHTML = `<span>${escapeHtml(item.text)}</span>`;
+        button.disabled = item.matched;
+        if (item.matched) button.classList.add('association-option-blocked');
         button.onclick = () => {
+          if (item.matched) return;
           selectedLeftId = item.id;
           updateStatus('Agora escolha o item correspondente da direita.');
           renderLists();
@@ -3634,16 +3645,21 @@ window.playAssociationGame = async function(id) {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'association-option association-option-number';
-        button.innerHTML = `<span class="association-number">${item.number}</span><span>${escapeHtml(item.text)}</span>`;
+        button.innerHTML = `<span>${escapeHtml(item.text)}</span>`;
+        button.disabled = item.matched;
+        if (item.matched) button.classList.add('association-option-blocked');
         button.onclick = () => {
+          if (item.matched) return;
           if (selectedLeftId === null) {
             updateStatus('Selecione um item à esquerda primeiro.');
             return;
           }
           if (selectedLeftId === item.id) {
             matchedPairs += 1;
-            leftItems.splice(leftItems.findIndex(i => i.id === selectedLeftId), 1);
-            rightItems.splice(rightItems.findIndex(i => i.id === item.id), 1);
+            const leftItem = leftItems.find(i => i.id === selectedLeftId);
+            const rightItem = rightItems.find(i => i.id === item.id);
+            if (leftItem) leftItem.matched = true;
+            if (rightItem) rightItem.matched = true;
             updateStatus(matchedPairs === pairs.length ? '🎉 Parabéns! Jogo completo.' : '✅ Correto! Continue com o próximo par.');
           } else {
             updateStatus('❌ Errado. Tente novamente.');
@@ -3710,8 +3726,8 @@ window.playAssociationGame = async function(id) {
 
   resetButton.onclick = () => {
     matchedPairs = 0;
-    leftItems.splice(0, leftItems.length, ...shuffleArray(pairs.map(pair => ({ id: pair.id, number: pair.id + 1, text: pair.left }))));
-    rightItems.splice(0, rightItems.length, ...shuffleArray(pairs.map(pair => ({ id: pair.id, number: pair.id + 1, text: pair.right }))));
+    leftItems.splice(0, leftItems.length, ...shuffleArray(pairs.map(pair => ({ id: pair.id, number: pair.id + 1, text: pair.left, matched: false }))));
+    rightItems.splice(0, rightItems.length, ...shuffleArray(pairs.map(pair => ({ id: pair.id, number: pair.id + 1, text: pair.right, matched: false }))));
     updateStatus(mode === 'numbers' ? 'Escolha um item à esquerda e depois o item correspondente à direita.' : 'Arraste o item da esquerda para o par correto à direita.');
     renderLists();
   };
