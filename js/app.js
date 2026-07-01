@@ -85,20 +85,24 @@ async function loadScreens(){
 // ==========================
 window.showScreen = async function(id){
 
+  const targetScreen = document.getElementById(id);
+  if(!targetScreen){
+    console.warn(`Tela não encontrada: ${id}`);
+    return;
+  }
+
   document
     .querySelectorAll('.screen')
     .forEach(screen=>{
       screen.classList.remove('active');
     });
 
-  document
-    .getElementById(id)
-    .classList.add('active');
+  targetScreen.classList.add('active');
 
  switch(id){
 
   case "playQuiz":
-    await loadQuizzesList();
+    loadQuizzesList().catch(error => console.error("ERRO AO CARREGAR QUIZES:", error));
     const playerNameInput = document.getElementById("playerName");
     const savedName = localStorage.getItem("playerName");
     if(playerNameInput && savedName){
@@ -107,29 +111,29 @@ window.showScreen = async function(id){
     break;
 
   case "quizBuilder":
-    await loadSavedQuizzes();
-    await loadQuestions();
+    loadSavedQuizzes().catch(error => console.error("ERRO AO CARREGAR QUIZES SALVOS:", error));
+    loadQuestions().catch(error => console.error("ERRO AO CARREGAR PERGUNTAS:", error));
     break;
 
   case "ranking":
-    await loadRanking();
+    loadRanking().catch(error => console.error("ERRO AO CARREGAR RANKING:", error));
     break;
 
   case "memoryGame":
-    await loadMemoryGames();
+    loadMemoryGames().catch(error => console.error("ERRO AO CARREGAR JOGOS DE MEMÓRIA:", error));
     break;
 
   case "gamesHub":
-    await loadGameHub();
+    loadGameHub().catch(error => console.error("ERRO AO CARREGAR HUB:", error));
     break;
 
   case "gameBuilder":
     renderBuilderForm();
-    await loadBuilderGames();
+    loadBuilderGames().catch(error => console.error("ERRO AO CARREGAR JOGOS DO BUILDER:", error));
     break;
 
   case "associationBuilder":
-    await loadAssociationList();
+    loadAssociationList().catch(error => console.error("ERRO AO CARREGAR ASSOCIAÇÕES:", error));
     const pairsContainer = document.getElementById("pairsContainer");
     if(pairsContainer){
       pairsContainer.innerHTML = "";
@@ -147,12 +151,23 @@ window.renderBuilderForm = function(){
   const buttonLabel = editingBuilderId ? "🔄 Atualizar Jogo" : "💾 Salvar Jogo";
 
   let html = `
-    <input type="text" id="builderGameTitle" placeholder="Nome do jogo" class="builder-input">
+    <div class="builder-field-group">
+      <label class="builder-field-label" for="builderGameTitle">Nome do jogo</label>
+      <input type="text" id="builderGameTitle" placeholder="Nome do jogo" class="builder-input">
+    </div>
+    <div class="builder-field-group">
+      <label class="builder-field-label" for="builderSetupTip">Dica de montagem</label>
+      <textarea id="builderSetupTip" class="builder-input builder-textarea" rows="3" placeholder="Exemplo: Use palavras relacionadas ao tema ou deixe uma orientação para o jogador."></textarea>
+    </div>
   `;
 
   switch(type){
     case "dragDrop":
       html += `
+        <div class="builder-field-group">
+          <label class="builder-field-label" for="builderDragDropInstruction">Instrução do jogo</label>
+          <textarea id="builderDragDropInstruction" class="builder-input builder-textarea" rows="4" placeholder="Exemplo: Arraste os tipos de rochas para seus respectivos grupos."></textarea>
+        </div>
         <div id="builderDragDropPairs"></div>
         <button type="button" class="primary" onclick="builderAddPair()">➕ Adicionar Par</button>
       `;
@@ -160,10 +175,15 @@ window.renderBuilderForm = function(){
 
     case "imageQuiz":
       html += `
-        <div class="builder">
-          <input type="text" id="builderImageQuizImage" placeholder="URL da imagem" class="builder-input">
-          <div style="text-align:center; color:#666; margin:10px 0;">ou</div>
-          <input type="file" id="builderImageQuizFile" accept="image/*" class="builder-input">
+        <div class="builder-card-section">
+          <div class="builder-field-group">
+            <label class="builder-field-label" for="builderImageQuizImage">Imagem do quiz</label>
+            <input type="text" id="builderImageQuizImage" placeholder="URL da imagem" class="builder-input">
+          </div>
+          <div class="builder-field-group">
+            <label class="builder-field-label" for="builderImageQuizFile">Ou envie uma imagem</label>
+            <input type="file" id="builderImageQuizFile" accept="image/*" class="builder-input">
+          </div>
         </div>
         <div id="builderImageQuizQuestions"></div>
         <button type="button" class="primary" onclick="builderAddImageQuizQuestion()">➕ Adicionar Pergunta</button>
@@ -172,8 +192,11 @@ window.renderBuilderForm = function(){
 
     case "memory":
       html += `
-        <div class="builder">
-          <input type="file" id="builderMemoryImage" accept="image/*" class="builder-input">
+        <div class="builder-card-section">
+          <div class="builder-field-group">
+            <label class="builder-field-label" for="builderMemoryImage">Imagem da carta</label>
+            <input type="file" id="builderMemoryImage" accept="image/*" class="builder-input">
+          </div>
           <button type="button" class="primary" onclick="addMemoryCard()">➕ Adicionar Carta</button>
         </div>
         <div id="memoryPreview" class="memory-grid"></div>
@@ -182,30 +205,72 @@ window.renderBuilderForm = function(){
 
     case "association":
       html += `
-        <div id="pairsContainer"></div>
+        <div class="builder-field-group">
+          <label class="builder-field-label" for="builderAssociationMode">Estilo da associação</label>
+          <select id="builderAssociationMode" class="builder-input">
+            <option value="lines">Linhas</option>
+            <option value="numbers">Números de colunas</option>
+          </select>
+        </div>
+        <div class="builder-field-group">
+          <label class="builder-field-label">Pares de associação</label>
+          <div id="pairsContainer"></div>
+        </div>
         <button type="button" class="primary" onclick="addPair()">➕ Adicionar Par</button>
+      `;
+      break;
+
+    case "crossword":
+      html += `
+        <div class="builder-field-group">
+          <label class="builder-field-label" for="builderCrosswordSize">Tamanho da grade</label>
+          <input type="number" id="builderCrosswordSize" min="8" max="20" value="12" class="builder-input">
+        </div>
+        <div class="builder-field-group">
+          <label class="builder-field-label">Perguntas da cruzada</label>
+          <div id="builderCrosswordQuestions"></div>
+          <button type="button" class="primary" onclick="builderAddCrosswordEntry()">➕ Adicionar pergunta</button>
+        </div>
       `;
       break;
 
     case "quiz":
       html += `
-        <div id="builderQuizQuestions"></div>
+        <div class="builder-field-group">
+          <label class="builder-field-label">Perguntas do quiz</label>
+          <div id="builderQuizQuestions"></div>
+        </div>
         <button type="button" class="primary" onclick="builderAddQuizQuestion()">➕ Adicionar Pergunta</button>
       `;
       break;
 
     case "completeWord":
       html += `
-        <input type="text" id="builderCompleteSentence" placeholder="Frase com lacuna usando ___" class="builder-input">
-        <input type="text" id="builderCompleteAnswer" placeholder="Palavra correta" class="builder-input">
-        <input type="text" id="builderCompleteHint" placeholder="Dica" class="builder-input">
+        <div class="builder-field-group">
+          <label class="builder-field-label" for="builderCompleteSentence">Frase com lacuna</label>
+          <textarea id="builderCompleteSentence" placeholder="Frase com lacuna usando ___" class="builder-input builder-textarea"></textarea>
+        </div>
+        <div class="builder-field-group">
+          <label class="builder-field-label" for="builderCompleteAnswer">Palavra correta</label>
+          <input type="text" id="builderCompleteAnswer" placeholder="Palavra correta" class="builder-input">
+        </div>
+        <div class="builder-field-group">
+          <label class="builder-field-label" for="builderCompleteHint">Dica</label>
+          <textarea id="builderCompleteHint" placeholder="Dica" class="builder-input builder-textarea"></textarea>
+        </div>
       `;
       break;
 
     case "sequenceLogic":
       html += `
-        <input type="text" id="builderSequence" placeholder="Sequência (vírgula separada)" class="builder-input">
-        <input type="text" id="builderSequenceHint" placeholder="Dica" class="builder-input">
+        <div class="builder-field-group">
+          <label class="builder-field-label" for="builderSequence">Sequência</label>
+          <textarea id="builderSequence" placeholder="Sequência (vírgula separada)" class="builder-input builder-textarea"></textarea>
+        </div>
+        <div class="builder-field-group">
+          <label class="builder-field-label" for="builderSequenceHint">Dica</label>
+          <textarea id="builderSequenceHint" placeholder="Dica" class="builder-input builder-textarea"></textarea>
+        </div>
       `;
       break;
 
@@ -224,6 +289,34 @@ window.renderBuilderForm = function(){
       builderAddPair();
     }
   }
+
+  if(type === "association"){
+    const container = document.getElementById("pairsContainer");
+    if(!editingBuilderId || !container || container.children.length === 0){
+      addPair();
+    }
+  }
+
+  if(type === "quiz"){
+    const container = document.getElementById("builderQuizQuestions");
+    if(!editingBuilderId || !container || container.children.length === 0){
+      builderAddQuizQuestion();
+    }
+  }
+
+  if(type === "crossword"){
+    const container = document.getElementById("builderCrosswordQuestions");
+    if(!editingBuilderId || !container || container.children.length === 0){
+      builderAddCrosswordEntry();
+    }
+  }
+
+  if(type === "imageQuiz"){
+    const container = document.getElementById("builderImageQuizQuestions");
+    if(!editingBuilderId || !container || container.children.length === 0){
+      builderAddImageQuizQuestion();
+    }
+  }
 };
 
 window.builderAddPair = function(){
@@ -233,8 +326,8 @@ window.builderAddPair = function(){
   const pair = document.createElement("div");
   pair.className = "dragdrop-row";
   pair.innerHTML = `
-    <input type="text" class="drag-left builder-input" placeholder="Item esquerdo">
-    <input type="text" class="drag-right builder-input" placeholder="Item direito">
+    <textarea class="drag-left builder-input builder-textarea" rows="2" placeholder="Item esquerdo"></textarea>
+    <textarea class="drag-right builder-input builder-textarea" rows="2" placeholder="Item direito"></textarea>
   `;
 
   container.appendChild(pair);
@@ -253,14 +346,29 @@ window.builderAddImageQuizQuestion = function(questionData = {}){
   const correct = questionData.correct || "";
 
   const item = document.createElement("div");
-  item.className = "image-quiz-question-card";
+  item.className = "builder-card-section image-quiz-question-card";
   item.innerHTML = `
     <h4>Pergunta ${questionIndex}</h4>
-    <textarea class="builder-input image-quiz-question-text" placeholder="Pergunta">${question}</textarea>
-    <input type="text" class="builder-input image-quiz-option" placeholder="Alternativa A" value="${a}">
-    <input type="text" class="builder-input image-quiz-option" placeholder="Alternativa B" value="${b}">
-    <input type="text" class="builder-input image-quiz-option" placeholder="Alternativa C" value="${c}">
-    <input type="text" class="builder-input image-quiz-option" placeholder="Alternativa D" value="${d}">
+    <div class="builder-field-group">
+      <label class="builder-field-label">Enunciado</label>
+      <textarea class="builder-input image-quiz-question-text builder-textarea" rows="3" placeholder="Pergunta">${escapeHtml(question)}</textarea>
+    </div>
+    <div class="builder-field-group">
+      <label class="builder-field-label">Alternativa A</label>
+      <textarea class="builder-input image-quiz-option builder-textarea" rows="2" placeholder="Alternativa A">${escapeHtml(a)}</textarea>
+    </div>
+    <div class="builder-field-group">
+      <label class="builder-field-label">Alternativa B</label>
+      <textarea class="builder-input image-quiz-option builder-textarea" rows="2" placeholder="Alternativa B">${escapeHtml(b)}</textarea>
+    </div>
+    <div class="builder-field-group">
+      <label class="builder-field-label">Alternativa C</label>
+      <textarea class="builder-input image-quiz-option builder-textarea" rows="2" placeholder="Alternativa C">${escapeHtml(c)}</textarea>
+    </div>
+    <div class="builder-field-group">
+      <label class="builder-field-label">Alternativa D</label>
+      <textarea class="builder-input image-quiz-option builder-textarea" rows="2" placeholder="Alternativa D">${escapeHtml(d)}</textarea>
+    </div>
     <select class="builder-input image-quiz-correct">
       <option value="">Resposta correta</option>
       <option value="A" ${correct === "A" ? "selected" : ""}>A</option>
@@ -288,14 +396,29 @@ window.builderAddQuizQuestion = function(questionData = {}){
   const correct = questionData.correct || "";
 
   const item = document.createElement("div");
-  item.className = "quiz-question-card";
+  item.className = "builder-card-section quiz-question-card";
   item.innerHTML = `
     <h4>Pergunta ${questionIndex}</h4>
-    <textarea class="builder-input quiz-question-text" placeholder="Pergunta">${question}</textarea>
-    <input type="text" class="builder-input quiz-option-a" placeholder="Alternativa A" value="${a}">
-    <input type="text" class="builder-input quiz-option-b" placeholder="Alternativa B" value="${b}">
-    <input type="text" class="builder-input quiz-option-c" placeholder="Alternativa C" value="${c}">
-    <input type="text" class="builder-input quiz-option-d" placeholder="Alternativa D" value="${d}">
+    <div class="builder-field-group">
+      <label class="builder-field-label">Enunciado</label>
+      <textarea class="builder-input quiz-question-text builder-textarea" rows="3" placeholder="Pergunta">${escapeHtml(question)}</textarea>
+    </div>
+    <div class="builder-field-group">
+      <label class="builder-field-label">Alternativa A</label>
+      <textarea class="builder-input quiz-option-a builder-textarea" rows="2" placeholder="Alternativa A">${escapeHtml(a)}</textarea>
+    </div>
+    <div class="builder-field-group">
+      <label class="builder-field-label">Alternativa B</label>
+      <textarea class="builder-input quiz-option-b builder-textarea" rows="2" placeholder="Alternativa B">${escapeHtml(b)}</textarea>
+    </div>
+    <div class="builder-field-group">
+      <label class="builder-field-label">Alternativa C</label>
+      <textarea class="builder-input quiz-option-c builder-textarea" rows="2" placeholder="Alternativa C">${escapeHtml(c)}</textarea>
+    </div>
+    <div class="builder-field-group">
+      <label class="builder-field-label">Alternativa D</label>
+      <textarea class="builder-input quiz-option-d builder-textarea" rows="2" placeholder="Alternativa D">${escapeHtml(d)}</textarea>
+    </div>
     <select class="builder-input quiz-question-correct">
       <option value="">Resposta correta</option>
       <option value="A" ${correct === "A" ? "selected" : ""}>A</option>
@@ -327,6 +450,7 @@ function updateQuizQuestionTitles(){
 window.saveBuilderGame = async function(){
   const type = document.getElementById("builderGameType")?.value;
   const title = document.getElementById("builderGameTitle")?.value.trim();
+  const setupTip = document.getElementById("builderSetupTip")?.value.trim() || "";
 
   if(!title){
     alert("Digite um título para o jogo");
@@ -350,7 +474,8 @@ window.saveBuilderGame = async function(){
         alert("Adicione pelo menos um par");
         return;
       }
-      data = { pairs };
+      const instruction = document.getElementById("builderDragDropInstruction")?.value.trim() || "";
+      data = { instruction, pairs };
       break;
 
     case "quiz":
@@ -446,7 +571,8 @@ window.saveBuilderGame = async function(){
         alert("Adicione pelo menos um par de associação.");
         return;
       }
-      data = { pairs: associationPairs };
+      const associationMode = document.getElementById("builderAssociationMode")?.value || "lines";
+      data = { pairs: associationPairs, mode: associationMode };
       break;
 
     case "sequenceLogic":
@@ -459,10 +585,26 @@ window.saveBuilderGame = async function(){
       data = { sequence: sequence.split(',').map(item => item.trim()).filter(Boolean), hint: sequenceHint };
       break;
 
+    case "crossword":
+      const crosswordCards = Array.from(document.querySelectorAll(".crossword-entry-card"));
+      const crosswordEntries = crosswordCards.map(card => ({
+        clue: card.querySelector(".crossword-question")?.value.trim(),
+        word: card.querySelector(".crossword-answer")?.value.trim().toUpperCase()
+      })).filter(entry => entry.clue && entry.word);
+      const crosswordSize = Number(document.getElementById("builderCrosswordSize")?.value || 12);
+      if(crosswordEntries.length === 0){
+        alert("Adicione pelo menos uma pergunta e resposta para a cruzada.");
+        return;
+      }
+      data = { size: crosswordSize, words: crosswordEntries.map(entry => ({ clue: entry.clue, word: entry.word })) };
+      break;
+
     default:
       alert("Tipo de jogo inválido");
       return;
   }
+
+  data.setupTip = setupTip;
 
   try {
     if(editingBuilderId){
@@ -484,6 +626,8 @@ window.saveBuilderGame = async function(){
       alert("✅ Jogo criado com sucesso!");
     }
     document.getElementById("builderGameTitle").value = "";
+    const setupTipInput = document.getElementById("builderSetupTip");
+    if(setupTipInput) setupTipInput.value = "";
     const imageUrlInput = document.getElementById("builderImageQuizImage");
     if(imageUrlInput) imageUrlInput.value = "";
     const fileInput = document.getElementById("builderImageQuizFile");
@@ -629,6 +773,7 @@ async function loadBuilderGames(){
       imageQuiz: "Quiz com Imagem",
       memory: "Memória",
       association: "Associação",
+      crossword: "Palavras Cruzadas",
       completeWord: "Complete a Palavra",
       sequenceLogic: "Sequência Lógica",
       outros: "Outros"
@@ -695,8 +840,16 @@ window.editBuilderGame = async function(id){
     document.getElementById("builderGameType").value = game.type;
     renderBuilderForm();
     document.getElementById("builderGameTitle").value = game.title;
+    const setupTipInput = document.getElementById("builderSetupTip");
+    if(setupTipInput){
+      setupTipInput.value = game.data?.setupTip || game.data?.tip || "";
+    }
 
     if(game.type === "dragDrop"){
+      const instructionInput = document.getElementById("builderDragDropInstruction");
+      if(instructionInput){
+        instructionInput.value = game.data.instruction || "";
+      }
       const container = document.getElementById("builderDragDropPairs");
       if(container){
         container.innerHTML = "";
@@ -704,8 +857,8 @@ window.editBuilderGame = async function(id){
           const row = document.createElement("div");
           row.className = "dragdrop-row";
           row.innerHTML = `
-            <input type="text" class="drag-left builder-input" placeholder="Item esquerdo" value="${pair.left}">
-            <input type="text" class="drag-right builder-input" placeholder="Item direito" value="${pair.right}">
+            <textarea class="drag-left builder-input builder-textarea" rows="2" placeholder="Item esquerdo">${escapeHtml(pair.left || "")}</textarea>
+            <textarea class="drag-right builder-input builder-textarea" rows="2" placeholder="Item direito">${escapeHtml(pair.right || "")}</textarea>
           `;
           container.appendChild(row);
         });
@@ -737,6 +890,10 @@ window.editBuilderGame = async function(id){
     }
 
     if(game.type === "association"){
+      const modeSelect = document.getElementById("builderAssociationMode");
+      if(modeSelect){
+        modeSelect.value = game.data.mode || "lines";
+      }
       const container = document.getElementById("pairsContainer");
       if(container){
         container.innerHTML = "";
@@ -744,11 +901,20 @@ window.editBuilderGame = async function(id){
           const row = document.createElement("div");
           row.className = "pair-row";
           row.innerHTML = `
-            <input type="text" class="left-item builder-input" placeholder="Item esquerdo" value="${pair.left}">
-            <input type="text" class="right-item builder-input" placeholder="Item direito" value="${pair.right}">
+            <textarea class="left-item builder-input builder-textarea" rows="2" placeholder="Item esquerdo">${escapeHtml(pair.left || "")}</textarea>
+            <textarea class="right-item builder-input builder-textarea" rows="2" placeholder="Item direito">${escapeHtml(pair.right || "")}</textarea>
           `;
           container.appendChild(row);
         });
+      }
+    }
+
+    if(game.type === "crossword"){
+      document.getElementById("builderCrosswordSize").value = game.data.size || 12;
+      const questionsContainer = document.getElementById("builderCrosswordQuestions");
+      if(questionsContainer){
+        questionsContainer.innerHTML = "";
+        (game.data.words || []).forEach(entry => builderAddCrosswordEntry(entry));
       }
     }
 
@@ -777,7 +943,10 @@ window.playBuilderGame = async function(id){
 
     const selectedGame = { id: docSnap.id, ...docSnap.data() };
     await showScreen('gameBuilder');
-    renderBuilderPlayArea(selectedGame, id);
+
+    setTimeout(() => {
+      renderBuilderPlayArea(selectedGame, id);
+    }, 120);
   } catch(error){
     console.error("ERRO AO CARREGAR BUILDER GAME PARA JOGAR:", error);
   }
@@ -794,8 +963,16 @@ window.renderBuilderPlayArea = function(game, cardId){
   };
   window.builderGameState = builderGameState;
 
-  const playArea = document.getElementById(`builderPlayArea-${builderGameState.cardId}`);
+  let playArea = document.getElementById(`builderPlayArea-${builderGameState.cardId}`);
+  if(!playArea){
+    playArea = document.getElementById('savedBuilderGamesList');
+  }
   if(!playArea) return;
+
+  if(playArea.id === 'savedBuilderGamesList'){
+    playArea.insertAdjacentHTML('beforeend', `<div id="builderPlayArea-${builderGameState.cardId}" class="builder-play-area"></div>`);
+    playArea = document.getElementById(`builderPlayArea-${builderGameState.cardId}`);
+  }
 
   document.querySelectorAll('.builder-play-area').forEach(area => {
     if(area.id !== `builderPlayArea-${builderGameState.cardId}`) {
@@ -803,12 +980,19 @@ window.renderBuilderPlayArea = function(game, cardId){
     }
   });
 
+  const setupTip = (game.data?.setupTip || game.data?.tip || "").trim();
+
   playArea.innerHTML = `
     <div class="question-card">
       <h3>Jogar: ${game.title}</h3>
+      ${setupTip ? `<div class="builder-instruction">💡 ${escapeHtml(setupTip)}</div>` : ""}
       <div id="builderPlayContent"></div>
     </div>
   `;
+
+  requestAnimationFrame(() => {
+    playArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 
   switch(game.type){
     case "dragDrop":
@@ -817,6 +1001,10 @@ window.renderBuilderPlayArea = function(game, cardId){
 
     case "association":
       renderBuilderAssociationGame(game);
+      break;
+
+    case "crossword":
+      renderBuilderCrosswordGame(game);
       break;
 
     case "quiz":
@@ -845,14 +1033,243 @@ function renderBuilderAssociationGame(game){
   const content = document.getElementById("builderPlayContent");
   if(!content) return;
 
-  renderAssociationLineGame(content, game.title, pairs, 'builderAssociation');
+  const mode = game.data?.mode || 'lines';
+  if(mode === 'numbers'){
+    renderAssociationNumberGame(content, game.title, pairs, 'builderAssociation');
+  } else {
+    renderAssociationLineGame(content, game.title, pairs, 'builderAssociation');
+  }
 }
+
+window.builderAddCrosswordEntry = function(entry = {}){
+  const container = document.getElementById("builderCrosswordQuestions");
+  if(!container) return;
+
+  const item = document.createElement("div");
+  item.className = "crossword-entry-card builder-card-section";
+  item.innerHTML = `
+    <div class="builder-field-group">
+      <label class="builder-field-label">Pergunta</label>
+      <textarea class="builder-input builder-textarea crossword-question" rows="2" placeholder="Exemplo: Qual é a capital do Brasil?">${escapeHtml(entry.clue || "")}</textarea>
+    </div>
+    <div class="builder-field-group">
+      <label class="builder-field-label">Resposta</label>
+      <input type="text" class="builder-input crossword-answer" value="${escapeHtml(entry.word || "")}" placeholder="Exemplo: BRASILIA">
+    </div>
+    <button type="button" class="secondary" onclick="this.closest('.crossword-entry-card').remove();">Remover</button>
+  `;
+
+  container.appendChild(item);
+}
+
+function buildCrosswordPuzzle(words, size = 12){
+  const normalizedWords = (words || []).filter(item => item?.word && item?.word.length >= 2).map(item => ({
+    word: item.word.toUpperCase(),
+    clue: item.clue || ""
+  }));
+
+  if(normalizedWords.length === 0){
+    return { size, grid: [], entries: [] };
+  }
+
+  const boardSize = Math.max(size, 10);
+  const grid = Array.from({ length: boardSize }, () => Array(boardSize).fill(null));
+  const placements = [];
+  const firstWord = normalizedWords[0];
+  const clueNumbers = [];
+  const startRow = Math.floor(boardSize / 2);
+  const startCol = Math.floor((boardSize - firstWord.word.length) / 2);
+
+  function canPlace(word, row, col, direction){
+    let intersections = 0;
+    for(let index = 0; index < word.length; index += 1){
+      const currentRow = row + (direction === 1 ? 0 : index);
+      const currentCol = col + (direction === 0 ? 0 : index);
+      const currentCell = grid[currentRow]?.[currentCol];
+      if(currentCell && currentCell.letter !== word[index]){
+        return { valid: false, intersections: 0 };
+      }
+      if(currentCell && currentCell.letter === word[index]){
+        intersections += 1;
+      }
+    }
+    return { valid: true, intersections };
+  }
+
+  function placeWord(word, row, col, direction){
+    if(!word || !Number.isInteger(row) || !Number.isInteger(col)) return;
+    const safeRow = Math.max(0, Math.min(boardSize - 1, row));
+    const safeCol = Math.max(0, Math.min(boardSize - 1, col));
+
+    for(let index = 0; index < word.length; index += 1){
+      const currentRow = safeRow + (direction === 1 ? 0 : index);
+      const currentCol = safeCol + (direction === 0 ? 0 : index);
+      if(currentRow >= boardSize || currentCol >= boardSize) return;
+      if(!grid[currentRow][currentCol]){
+        grid[currentRow][currentCol] = { letter: word[index], active: true };
+      }
+    }
+    placements.push({ word, row: safeRow, col: safeCol, direction });
+    clueNumbers.push({ word, row: safeRow, col: safeCol, direction });
+  }
+
+  placeWord(firstWord.word, startRow, startCol, 0);
+
+  for(const entry of normalizedWords.slice(1)){
+    let placed = false;
+    for(let row = 0; row < boardSize; row += 1){
+      for(let col = 0; col < boardSize; col += 1){
+        for(const direction of [0, 1]){
+          const result = canPlace(entry.word, row, col, direction);
+          if(result.valid && result.intersections > 0){
+            placeWord(entry.word, row, col, direction);
+            placed = true;
+            break;
+          }
+        }
+        if(placed) break;
+      }
+      if(placed) break;
+    }
+
+    if(!placed){
+      const fallbackRow = Math.min(boardSize - 1, 2 + placements.length);
+      const fallbackCol = Math.min(boardSize - entry.word.length, 2 + placements.length);
+      placeWord(entry.word, fallbackRow, fallbackCol, placements.length % 2);
+    }
+  }
+
+  return {
+    size: boardSize,
+    grid,
+    entries: placements.map((placement, index) => ({
+      ...placement,
+      clue: normalizedWords[index]?.clue || "",
+      number: index + 1
+    }))
+  };
+}
+
+function renderBuilderCrosswordGame(game){
+  const content = document.getElementById("builderPlayContent");
+  if(!content) return;
+
+  const puzzle = buildCrosswordPuzzle(game.data?.words || [], game.data?.size || 12);
+  const answers = Array.from({ length: puzzle.size }, () => Array(puzzle.size).fill(""));
+
+  builderGameState.crossword = {
+    puzzle,
+    answers,
+    size: puzzle.size,
+    showAnswers: false
+  };
+
+  content.innerHTML = `
+    <div class="question-card association-game-card">
+      <h3>${escapeHtml(game.title)}</h3>
+      <p>${(game.data?.words || []).length} palavras</p>
+      <div id="builderCrosswordStatus" class="association-status">Preencha as letras da grade.</div>
+      <div class="crossword-clues">
+        <h4>Pistas</h4>
+        <ol id="builderCrosswordClues"></ol>
+      </div>
+      <div id="builderCrosswordBoard" class="crossword-board"></div>
+      <div class="button-row">
+        <button type="button" class="secondary" onclick="toggleCrosswordAnswers()">Consultar respostas</button>
+        <button type="button" class="primary" onclick="renderBuilderPlayArea(builderGameState.game, builderGameState.cardId)">Reiniciar</button>
+      </div>
+    </div>
+  `;
+
+  const board = document.getElementById("builderCrosswordBoard");
+  const status = document.getElementById("builderCrosswordStatus");
+  const clues = document.getElementById("builderCrosswordClues");
+  if(!board || !status || !clues) return;
+
+  clues.innerHTML = (game.data?.words || []).map((item, index) => `
+    <li><strong>${index + 1}.</strong> ${escapeHtml(item.clue)}</li>
+  `).join('');
+
+  const renderBoard = () => {
+    board.innerHTML = "";
+    const fragment = document.createDocumentFragment();
+
+    for(let row = 0; row < puzzle.size; row += 1){
+      for(let col = 0; col < puzzle.size; col += 1){
+        const cell = puzzle.grid[row]?.[col];
+        const wrapper = document.createElement("div");
+        wrapper.className = cell?.active ? "crossword-cell" : "crossword-cell crossword-cell-black";
+
+        if(cell?.active){
+          const input = document.createElement("input");
+          const clueNumber = puzzle.entries.find(entry => entry.row === row && entry.col === col)?.number;
+          const hasHintLetter = builderGameState.crossword.answers[row][col] || (cell.letter && clueNumber);
+          const hintLabel = clueNumber ? `<span class="crossword-number">${clueNumber}</span>` : "";
+          const hintLetter = cell.letter && clueNumber ? `<span class="crossword-hint-letter">${cell.letter}</span>` : "";
+          input.maxLength = 1;
+          input.value = builderGameState.crossword.answers[row][col] || "";
+          input.dataset.row = row;
+          input.dataset.col = col;
+          input.className = "crossword-input";
+          input.addEventListener("input", (event) => {
+            const target = event.target;
+            const currentRow = Number(target.dataset.row);
+            const currentCol = Number(target.dataset.col);
+            const value = target.value.toUpperCase().replace(/[^A-ZÀ-Ú]/gi, "").slice(-1);
+            target.value = value;
+            builderGameState.crossword.answers[currentRow][currentCol] = value;
+            const isComplete = builderGameState.crossword.answers.every((answerRow, answerRowIndex) =>
+              answerRow.every((answerCell, answerColIndex) => {
+                const solutionCell = puzzle.grid[answerRowIndex]?.[answerColIndex];
+                return !solutionCell?.active || (answerCell || "") === solutionCell.letter;
+              })
+            );
+            status.textContent = isComplete ? "🎉 Palavra cruzada completa!" : "Preencha as letras da grade.";
+          });
+          const overlay = document.createElement("div");
+          overlay.className = "crossword-cell-overlay";
+          overlay.innerHTML = `${hintLabel}${hintLetter}`;
+          wrapper.appendChild(overlay);
+          wrapper.appendChild(input);
+        }
+
+        fragment.appendChild(wrapper);
+      }
+    }
+
+    board.appendChild(fragment);
+  };
+
+  renderBoard();
+}
+
+window.toggleCrosswordAnswers = function(){
+  if(!builderGameState?.crossword) return;
+
+  builderGameState.crossword.showAnswers = !builderGameState.crossword.showAnswers;
+  const board = document.getElementById("builderCrosswordBoard");
+  if(!board) return;
+
+  const cells = board.querySelectorAll(".crossword-cell");
+  cells.forEach((cell, index) => {
+    const row = Math.floor(index / builderGameState.crossword.size);
+    const col = index % builderGameState.crossword.size;
+    const solutionCell = builderGameState.crossword.puzzle.grid[row]?.[col];
+    if(solutionCell?.active){
+      const input = cell.querySelector(".crossword-input");
+      if(input){
+        input.value = builderGameState.crossword.showAnswers ? solutionCell.letter : (builderGameState.crossword.answers[row]?.[col] || "");
+      }
+    }
+  });
+};
 
 function renderBuilderDragDropGame(game){
   const content = document.getElementById("builderPlayContent");
   if(!content) return;
 
   const pairs = game.data.pairs.map((pair, index)=>({ id: index, left: pair.left, right: pair.right }));
+  const instruction = (game.data?.instruction || "").trim() || "Arraste cada item à esquerda para o item correspondente à direita.";
 
   builderGameState.pairs = pairs;
   builderGameState.leftItems = shuffleArray(pairs.map(item => ({ id: item.id, text: item.left })));
@@ -867,6 +1284,7 @@ function renderBuilderDragDropGame(game){
       <h3>${game.title}</h3>
       <p>${pairs.length} pares</p>
       <div id="builderPlayStatus" class="association-status">${builderGameState.status}</div>
+      <p class="builder-instruction">${escapeHtml(instruction)}</p>
       <div class="association-game-board">
         <svg id="builderDragLines" class="association-lines"></svg>
         <div class="association-board">
@@ -931,12 +1349,12 @@ function renderAssociationLineGame(container, title, pairs, prefix){
     return connections.some(conn => conn.id === id);
   }
 
-  function getElementCenter(el){
+  function getElementAnchor(el){
     const rect = el.getBoundingClientRect();
     const boardRect = board.getBoundingClientRect();
     return {
-      x: rect.left - boardRect.left + rect.width / 2,
-      y: rect.top - boardRect.top + rect.height / 2
+      x: rect.left - boardRect.left + 16,
+      y: rect.top - boardRect.top + 20
     };
   }
 
@@ -950,15 +1368,15 @@ function renderAssociationLineGame(container, title, pairs, prefix){
       const leftEl = leftList.querySelector(`[data-left-id='${conn.id}']`);
       const rightEl = rightList.querySelector(`[data-right-id='${conn.id}']`);
       if (!leftEl || !rightEl) return;
-      const start = getElementCenter(leftEl);
-      const end = getElementCenter(rightEl);
+      const start = getElementAnchor(leftEl);
+      const end = getElementAnchor(rightEl);
       const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
       line.setAttribute('x1', start.x);
       line.setAttribute('y1', start.y);
       line.setAttribute('x2', end.x);
       line.setAttribute('y2', end.y);
-      line.setAttribute('stroke', '#7a33f9');
-      line.setAttribute('stroke-width', '4');
+      line.setAttribute('stroke', 'rgba(122, 51, 249, 0.35)');
+      line.setAttribute('stroke-width', '2');
       line.setAttribute('stroke-linecap', 'round');
       svg.appendChild(line);
     });
@@ -1031,6 +1449,105 @@ function renderAssociationLineGame(container, title, pairs, prefix){
     selectedLeftId = null;
     matchedPairs = 0;
     updateStatus('Clique em um item à esquerda e depois no correspondente à direita.');
+    renderLists();
+  };
+
+  renderLists();
+}
+
+function renderAssociationNumberGame(container, title, pairs, prefix){
+  const leftItems = shuffleArray(pairs.map(pair => ({ id: pair.id, number: pair.id + 1, text: pair.left })));
+  const rightItems = shuffleArray(pairs.map(pair => ({ id: pair.id, number: pair.id + 1, text: pair.right })));
+  let selectedLeftId = null;
+  let matchedPairs = 0;
+
+  container.innerHTML = `
+    <div class="question-card association-game-card">
+      <h3>${title}</h3>
+      <p>${pairs.length} pares</p>
+      <div id="${prefix}GameStatus" class="association-status">Escolha um item à esquerda e depois o item correspondente à direita.</div>
+      <div class="association-game-board">
+        <div class="association-column">
+          <h4>Coluna 1</h4>
+          <div id="${prefix}LeftList" class="association-list"></div>
+        </div>
+        <div class="association-column">
+          <h4>Coluna 2</h4>
+          <div id="${prefix}RightList" class="association-list"></div>
+        </div>
+      </div>
+      <button id="${prefix}Reset" type="button" class="primary">Reiniciar</button>
+    </div>
+  `;
+
+  const status = document.getElementById(`${prefix}GameStatus`);
+  const leftList = document.getElementById(`${prefix}LeftList`);
+  const rightList = document.getElementById(`${prefix}RightList`);
+  const resetButton = document.getElementById(`${prefix}Reset`);
+
+  function updateStatus(message) {
+    if (status) status.textContent = message;
+  }
+
+  function isMatched(id){
+    return matchedPairs > 0 && leftItems.every(item => item.id !== id);
+  }
+
+  function renderLists(){
+    leftList.innerHTML = "";
+    rightList.innerHTML = "";
+
+    leftItems.forEach(item => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'association-option association-option-number';
+      button.innerHTML = `<span class="association-number">${item.number}</span><span>${escapeHtml(item.text)}</span>`;
+      button.dataset.leftId = item.id;
+      if (selectedLeftId === item.id) button.classList.add('selected');
+      button.onclick = () => {
+        selectedLeftId = item.id;
+        updateStatus('Agora escolha o item correspondente da direita.');
+        renderLists();
+      };
+      leftList.appendChild(button);
+    });
+
+    rightItems.forEach(item => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'association-option association-option-number';
+      button.innerHTML = `<span class="association-number">${item.number}</span><span>${escapeHtml(item.text)}</span>`;
+      button.dataset.rightId = item.id;
+      button.onclick = () => {
+        if (selectedLeftId === null) {
+          updateStatus('Selecione um item à esquerda primeiro.');
+          return;
+        }
+        if (selectedLeftId === item.id) {
+          matchedPairs += 1;
+          leftItems.splice(leftItems.findIndex(i => i.id === selectedLeftId), 1);
+          rightItems.splice(rightItems.findIndex(i => i.id === item.id), 1);
+          updateStatus(matchedPairs === pairs.length ? '🎉 Parabéns! Todos os pares foram conectados.' : '✅ Correto! Continue conectando.');
+        } else {
+          updateStatus('❌ Errado. Tente novamente.');
+        }
+        selectedLeftId = null;
+        renderLists();
+      };
+      rightList.appendChild(button);
+    });
+
+    if (matchedPairs === pairs.length) {
+      updateStatus('🎉 Jogo concluído!');
+    }
+  }
+
+  resetButton.onclick = () => {
+    leftItems.splice(0, leftItems.length, ...shuffleArray(pairs.map(pair => ({ id: pair.id, number: pair.id + 1, text: pair.left }))));
+    rightItems.splice(0, rightItems.length, ...shuffleArray(pairs.map(pair => ({ id: pair.id, number: pair.id + 1, text: pair.right }))));
+    selectedLeftId = null;
+    matchedPairs = 0;
+    updateStatus('Escolha um item à esquerda e depois o item correspondente à direita.');
     renderLists();
   };
 
@@ -1446,6 +1963,7 @@ async function loadGameHub(){
         imageQuiz: "Quiz com Imagem",
         memory: "Memória",
         association: "Associação",
+        crossword: "Palavras Cruzadas",
         completeWord: "Complete a Palavra",
         sequenceLogic: "Sequência Lógica",
         outros: "Outros"
@@ -2406,7 +2924,7 @@ window.addMemoryCard = async function(){
   }
 
   const inputFile =
-    document.querySelector(".screen.active #memoryImage, .screen.active #builderMemoryImage");
+    document.querySelector(".screen.active #memoryImage, .screen.active #builderMemoryImage, #memoryImage, #builderMemoryImage");
 
   console.log("📁 INPUT FILE:", inputFile);
 
@@ -3060,22 +3578,23 @@ window.playAssociationGame = async function(id) {
     right: pair.right
   }));
 
-  const leftItems = shuffleArray(pairs.map(pair => ({ id: pair.id, text: pair.left })));
-  const rightItems = shuffleArray(pairs.map(pair => ({ id: pair.id, text: pair.right })));
+  const mode = selectedGame.mode || 'lines';
+  const leftItems = shuffleArray(pairs.map(pair => ({ id: pair.id, number: pair.id + 1, text: pair.left })));
+  const rightItems = shuffleArray(pairs.map(pair => ({ id: pair.id, number: pair.id + 1, text: pair.right })));
   let matchedPairs = 0;
 
   container.innerHTML = `
     <div class="question-card association-game-card">
       <h3>${selectedGame.title}</h3>
       <p>${pairs.length} pares</p>
-      <div id="associationGameStatus" class="association-status">Arraste o item da esquerda para o par correto à direita.</div>
+      <div id="associationGameStatus" class="association-status">${mode === 'numbers' ? 'Escolha um item à esquerda e depois o item correspondente à direita.' : 'Arraste o item da esquerda para o par correto à direita.'}</div>
       <div class="association-board">
         <div class="association-column">
-          <h4>Arraste estes itens</h4>
+          <h4>${mode === 'numbers' ? 'Coluna 1' : 'Arraste estes itens'}</h4>
           <div id="associationLeftList" class="association-list"></div>
         </div>
         <div class="association-column">
-          <h4>Solte no par correto</h4>
+          <h4>${mode === 'numbers' ? 'Coluna 2' : 'Solte no par correto'}</h4>
           <div id="associationRightList" class="association-list"></div>
         </div>
       </div>
@@ -3087,6 +3606,7 @@ window.playAssociationGame = async function(id) {
   const leftList = document.getElementById("associationLeftList");
   const rightList = document.getElementById("associationRightList");
   const resetButton = document.getElementById("associationReset");
+  let selectedLeftId = null;
 
   function updateStatus(message) {
     if (status) status.textContent = message;
@@ -3095,6 +3615,45 @@ window.playAssociationGame = async function(id) {
   function renderLists() {
     leftList.innerHTML = "";
     rightList.innerHTML = "";
+
+    if (mode === 'numbers') {
+      leftItems.forEach(item => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'association-option association-option-number';
+        button.innerHTML = `<span class="association-number">${item.number}</span><span>${escapeHtml(item.text)}</span>`;
+        button.onclick = () => {
+          selectedLeftId = item.id;
+          updateStatus('Agora escolha o item correspondente da direita.');
+          renderLists();
+        };
+        leftList.appendChild(button);
+      });
+
+      rightItems.forEach(item => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'association-option association-option-number';
+        button.innerHTML = `<span class="association-number">${item.number}</span><span>${escapeHtml(item.text)}</span>`;
+        button.onclick = () => {
+          if (selectedLeftId === null) {
+            updateStatus('Selecione um item à esquerda primeiro.');
+            return;
+          }
+          if (selectedLeftId === item.id) {
+            matchedPairs += 1;
+            leftItems.splice(leftItems.findIndex(i => i.id === selectedLeftId), 1);
+            rightItems.splice(rightItems.findIndex(i => i.id === item.id), 1);
+            updateStatus(matchedPairs === pairs.length ? '🎉 Parabéns! Jogo completo.' : '✅ Correto! Continue com o próximo par.');
+          } else {
+            updateStatus('❌ Errado. Tente novamente.');
+          }
+          renderLists();
+        };
+        rightList.appendChild(button);
+      });
+      return;
+    }
 
     leftItems.forEach(item => {
       const button = document.createElement('button');
@@ -3151,9 +3710,9 @@ window.playAssociationGame = async function(id) {
 
   resetButton.onclick = () => {
     matchedPairs = 0;
-    leftItems.splice(0, leftItems.length, ...shuffleArray(pairs.map(pair => ({ id: pair.id, text: pair.left }))));
-    rightItems.splice(0, rightItems.length, ...shuffleArray(pairs.map(pair => ({ id: pair.id, text: pair.right }))));
-    updateStatus('Arraste o item da esquerda para o par correto à direita.');
+    leftItems.splice(0, leftItems.length, ...shuffleArray(pairs.map(pair => ({ id: pair.id, number: pair.id + 1, text: pair.left }))));
+    rightItems.splice(0, rightItems.length, ...shuffleArray(pairs.map(pair => ({ id: pair.id, number: pair.id + 1, text: pair.right }))));
+    updateStatus(mode === 'numbers' ? 'Escolha um item à esquerda e depois o item correspondente à direita.' : 'Arraste o item da esquerda para o par correto à direita.');
     renderLists();
   };
 
@@ -3258,17 +3817,17 @@ window.addPair = function () {
   pair.className = "pair-row";
 
   pair.innerHTML = `
-    <input
-      type="text"
+    <textarea
       placeholder="Item esquerdo"
-      class="left-item"
-    >
+      class="left-item builder-input builder-textarea"
+      rows="2"
+    ></textarea>
 
-    <input
-      type="text"
+    <textarea
       placeholder="Item direito"
-      class="right-item"
-    >
+      class="right-item builder-input builder-textarea"
+      rows="2"
+    ></textarea>
   `;
 
   container.appendChild(pair);

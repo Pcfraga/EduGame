@@ -396,6 +396,43 @@ h2{
   background:#FFFDFE;
 }
 
+.builder-input{
+  display:block;
+  width:100%;
+  padding:16px 18px;
+  border:2px solid rgba(255,182,193,0.5);
+  border-radius:20px;
+  font-size:16px;
+  font-family:'Fredoka', 'Poppins', sans-serif;
+  background:#FFFDFE;
+  color:#1a1a1a;
+}
+
+.builder-field-group{
+  margin-bottom:16px;
+}
+
+.builder-field-label{
+  display:block;
+  margin-bottom:8px;
+  font-weight:700;
+  color:#4a3b9c;
+}
+
+.builder-card-section{
+  background:linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(255,250,252,0.96) 100%);
+  border:1px solid rgba(255,182,193,0.35);
+  border-radius:24px;
+  padding:20px;
+  margin-bottom:16px;
+  box-shadow:0 8px 22px rgba(0,0,0,0.06);
+}
+
+.builder-card-section h4{
+  margin:0 0 12px;
+  color:#6b4fd1;
+}
+
 .builder input:focus,
 .builder textarea:focus,
 .builder select:focus{
@@ -515,6 +552,11 @@ button.primary:active{
   background:#FFFDFE;
 }
 
+.builder-textarea{
+  min-height:110px;
+  resize:vertical;
+}
+
 .dragdrop-row{
   display:flex;
   flex-wrap:wrap;
@@ -522,10 +564,26 @@ button.primary:active{
   margin-bottom:14px;
 }
 
-.dragdrop-row input{
-  flex:1 1 220px;
-  min-width:160px;
+.dragdrop-row textarea{
+  flex:1 1 240px;
+  min-width:200px;
   width:auto;
+  min-height:86px;
+}
+
+.builder-play-area{
+  margin-top:16px;
+}
+
+.builder-instruction{
+  margin:0 0 14px;
+  padding:14px 16px;
+  border-radius:18px;
+  background:rgba(108, 92, 231, 0.08);
+  border:1px solid rgba(108, 92, 231, 0.16);
+  color:#4a3b9c;
+  font-weight:700;
+  line-height:1.5;
 }
 
 .pair-row{
@@ -535,10 +593,11 @@ button.primary:active{
   margin-bottom:14px;
 }
 
-.pair-row input{
+.pair-row textarea{
   flex:1 1 220px;
   min-width:160px;
   width:auto;
+  min-height:84px;
 }
 
 .builder .button-row{
@@ -598,21 +657,22 @@ button.primary:active{
 
 .association-lines {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
   overflow: visible;
-  z-index: 5;
+  z-index: 0;
 }
 
 .association-column {
-  background: rgba(255,255,255,0.92);
+  background: transparent;
   border-radius: 24px;
   padding: 16px;
   min-height: 220px;
-  box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+  box-shadow: none;
+  position: relative;
+  z-index: 1;
 }
 
 .association-column h4 {
@@ -654,9 +714,23 @@ button.primary:active{
   background: rgba(255, 107, 157, 0.12);
 }
 
-.association-option.drag-over {
-  border-color: #ff6b9d;
-  background: rgba(255, 107, 157, 0.12);
+.association-option-number {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:220px;
+}
+
+.association-number {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  background:linear-gradient(135deg, #7a33f9 0%, #ff6b9d 100%);
+  color:white;
+  font-weight:800;
 }
 
 .association-pair .delete-btn{
@@ -677,6 +751,83 @@ hr{
   border:none;
   border-top:3px dashed rgba(255,255,255,0.3);
   margin:35px 0;
+}
+
+.crossword-board{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(34px, 1fr));
+  gap:4px;
+  max-width:520px;
+  margin:16px auto 20px;
+}
+
+.crossword-cell{
+  aspect-ratio:1;
+  border:1px solid rgba(108, 92, 231, 0.25);
+  border-radius:10px;
+  background:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:34px;
+  position:relative;
+}
+
+.crossword-cell-overlay{
+  position:absolute;
+  inset:2px 2px auto auto;
+  font-size:9px;
+  font-weight:800;
+  color:#7a33f9;
+  pointer-events:none;
+}
+
+.crossword-number{
+  position:absolute;
+  top:2px;
+  left:3px;
+  font-size:8px;
+  font-weight:800;
+  color:#7a33f9;
+}
+
+.crossword-hint-letter{
+  position:absolute;
+  top:2px;
+  right:3px;
+  font-size:8px;
+  font-weight:800;
+  color:#ff6b9d;
+}
+
+.crossword-cell-black{
+  background:transparent;
+  border:none;
+}
+
+.crossword-input{
+  width:100%;
+  height:100%;
+  border:none;
+  outline:none;
+  text-align:center;
+  font-size:16px;
+  font-weight:700;
+  color:#4a3b9c;
+  background:transparent;
+}
+
+.crossword-clues{
+  margin-top:12px;
+  padding:14px 16px;
+  border-radius:18px;
+  background:rgba(255,255,255,0.92);
+}
+
+.crossword-clues ul{
+  margin:8px 0 0 18px;
+  display:grid;
+  gap:8px;
 }
 
 .memory-grid{
